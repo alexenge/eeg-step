@@ -1,0 +1,52 @@
+# ================================
+# Line endings normalization
+# ================================
+# Always use LF line endings in the repo
+* text=auto eol=lf
+
+# ================================
+# File type and diff settings
+# ================================
+*.py        text diff=python
+*.toml      text
+*.yml       text
+*.yaml      text
+*.md        text
+*.rst       text
+*.json      text
+*.csv       text linguist-vendored
+*.tsv       text linguist-vendored
+*.txt       text linguist-vendored
+*.html      text
+*.css       text
+*.js        text
+
+# ================================
+# Binary files
+# ================================
+# Prevent Git from trying to diff or modify binary files
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.svg       binary
+*.pdf       binary
+*.h5        binary
+*.npy       binary
+*.npz       binary
+*.pkl       binary
+*.gz        binary
+*.zip       binary
+*.tar       binary
+
+# ================================
+# GitHub Linguist overrides
+# ================================
+# Ensure GitHub recognizes your project as Python
+*.py linguist-language=Python
+
+# Ignore build and test directories in language stats
+build/* linguist-vendored
+dist/* linguist-vendored
+docs/* linguist-documentation
+tests/* linguist-vendored

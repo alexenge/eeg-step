@@ -1,0 +1,86 @@
+# ================================
+# Python basics
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ================================
+# Build and distribution artifacts
+# ================================
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+*.whl
+pip-wheel-metadata/
+
+# ================================
+# Hatch
+# ================================
+.hatch/
+.hatch-build/
+.hatch-*
+# Hatch environments (if created in-project)
+.hatch-env/
+
+# ================================
+# Coverage & testing
+# ================================
+.coverage
+coverage.xml
+htmlcov/
+.cache/
+.pytest_cache/
+.tox/
+.nox/
+
+# ================================
+# Ruff, linting, formatting
+# ================================
+.ruff_cache/
+
+# ================================
+# IDEs and editors
+# ================================
+# VS Code
+.vscode/
+# PyCharm
+.idea/
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# ================================
+# Environment & dependency management
+# ================================
+.env
+.venv/
+venv/
+env/
+*.env
+
+# ================================
+# Logs and temp files
+# ================================
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# ================================
+# Jupyter / data outputs
+# ================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+*.ipynb_meta.json
+*.dat
+*.h5
+*.hdf5
+
+# ================================
+# Codecov
+# ================================
+codecov.yml

@@ -1,0 +1,91 @@
+[project]
+name = "eeg-step"
+description = "Single-trial EEG pipeline"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE.md"]
+authors = [{ name = "Alexander Enge", email = "alex_enge@web.de" }]
+keywords = [
+  "eeg",
+  "electroencephalography",
+  "neuroscience",
+  "psychology",
+  "research",
+  "science"
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering"
+]
+dependencies = [
+  "chardet",
+  "eeg-ride",
+  "joblib",
+  "matplotlib",
+  "mne",
+  "pandas",
+  "pooch",
+  "scikit-learn"
+]
+dynamic = ["version"]
+
+[project.urls]
+Changelog = "https://github.com/alexenge/eeg-step/releases"
+Documentation = "https://readthedocs.org/projects/eeg-step"
+Issues = "https://github.com/alexenge/eeg-step/issues"
+Repository = "https://github.com/alexenge/eeg-step"
+
+[build-system]
+requires = ["hatch-vcs", "hatchling >= 1.27"]
+build-backend = "hatchling.build"
+
+[tool.coverage.run]
+branch = true
+source = ["src/step"]
+omit = ["tests/*"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "LICENSE.md", "README.md"]
+
+[tool.hatch.build.targets.wheel]
+# Note: PyPI package is "eeg-step", import name is "step"
+packages = ["src/step"]
+
+[tool.hatch.envs.default]
+dependencies = ["pytest", "pytest-cov"]
+scripts.test = "pytest --cov"
+
+[tool.hatch.envs.lint]
+dependencies = ["ruff"]
+
+[tool.hatch.envs.lint.scripts]
+check = "ruff check src tests"
+fix = "ruff check src tests --fix"
+format = "ruff format src tests"
+
+[tool.pytest.ini_options]
+addopts = ["--cov"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+lint.select = ["E", "F", "I"]
+exclude = ["build", "dist", ".venv", ".hatch"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["step"]
