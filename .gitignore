@@ -30,6 +30,7 @@ pip-wheel-metadata/
 # ================================
 .coverage
 coverage.xml
+junit.xml
 htmlcov/
 .cache/
 .pytest_cache/
