@@ -25,7 +25,7 @@ jobs:
         run: pip install hatch
 
       - name: Run linter
-        run: hatch run lint:check
+        run: hatch run lint
 
   test:
     name: Run tests

@@ -1,7 +1,7 @@
 [project]
 name = "eeg-step"
 description = "Single-trial EEG pipeline"
-readme = { file = "README.md", content-type = "text/markdown" }
+readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 license-files = ["LICENSE.md"]
@@ -63,19 +63,15 @@ source = "vcs"
 include = ["src", "LICENSE.md", "README.md"]
 
 [tool.hatch.build.targets.wheel]
-# Note: PyPI package is "eeg-step", import name is "step"
 packages = ["src/step"]
 
 [tool.hatch.envs.default]
-dependencies = ["pytest", "pytest-cov"]
-scripts.test = "pytest --cov"
+dependencies = ["ipykernel", "pytest", "pytest-cov", "ruff"]
 
-[tool.hatch.envs.lint]
-dependencies = ["ruff"]
-
-[tool.hatch.envs.lint.scripts]
-check = "ruff check src tests"
-fix = "ruff check src tests --fix"
+[tool.hatch.envs.default.scripts]
+test = "pytest --cov --cov-report=xml"
+lint = "ruff check src tests"
+lint-fix = "ruff check src tests --fix"
 format = "ruff format src tests"
 
 [tool.pytest.ini_options]
