@@ -69,7 +69,7 @@ packages = ["src/step"]
 dependencies = ["ipykernel", "pytest", "pytest-cov", "ruff"]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest --cov --junitxml=junit.xml -o junit_family=legacy"
+test = "pytest --cov --cov-report=xml --junitxml=junit.xml -o junit_family=legacy"
 lint = "ruff check src tests"
 lint-fix = "ruff check src tests --fix"
 format = "ruff format src tests"
