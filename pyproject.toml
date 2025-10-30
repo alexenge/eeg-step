@@ -3,8 +3,7 @@ name = "eeg-step"
 description = "Single-trial EEG pipeline"
 readme = "README.md"
 requires-python = ">=3.9"
-license = "MIT"
-license-files = ["LICENSE.md"]
+license = { file = "LICENSE.md" }
 authors = [{ name = "Alexander Enge", email = "alex_enge@web.de" }]
 keywords = [
   "eeg",
@@ -48,7 +47,7 @@ Issues = "https://github.com/alexenge/eeg-step/issues"
 Repository = "https://github.com/alexenge/eeg-step"
 
 [build-system]
-requires = ["hatch-vcs", "hatchling >= 1.27"]
+requires = ["hatch-vcs", "hatchling == 1.26.3"]
 build-backend = "hatchling.build"
 
 [tool.coverage.run]
