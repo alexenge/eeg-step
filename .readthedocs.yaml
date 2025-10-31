@@ -14,7 +14,7 @@ python:
   install:
     - method: pip
       path: .
-      extra_requirements: []
+      extra_requirements: [docs]
 
 # Build documentation using Sphinx
 sphinx:

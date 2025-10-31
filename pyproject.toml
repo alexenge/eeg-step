@@ -46,6 +46,15 @@ Documentation = "https://readthedocs.org/projects/eeg-step"
 Issues = "https://github.com/alexenge/eeg-step/issues"
 Repository = "https://github.com/alexenge/eeg-step"
 
+[project.optional-dependencies]
+docs = [
+  "sphinx",
+  "furo",
+  "myst-parser",
+  "sphinx-autodoc-typehints",
+  "sphinx-copybutton",
+]
+
 [build-system]
 requires = ["hatch-vcs", "hatchling == 1.26.3"]
 build-backend = "hatchling.build"
@@ -66,13 +75,13 @@ packages = ["src/step"]
 
 [tool.hatch.envs.default]
 dependencies = [
-  "furo",
   "ipykernel",
-  "myst-parser",
   "pytest",
   "pytest-cov",
   "ruff",
   "sphinx",
+  "furo",
+  "myst-parser",
   "sphinx-autodoc-typehints",
   "sphinx-copybutton"
 ]
