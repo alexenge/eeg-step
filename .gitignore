@@ -85,3 +85,13 @@ Thumbs.db
 # Codecov
 # ================================
 codecov.yml
+
+# ================================
+# Documentation
+# ================================
+docs/_build/
+docs/_autosummary/
+docs/_api/
+docs/_generated/
+docs/.doctrees/
+docs/.buildinfo

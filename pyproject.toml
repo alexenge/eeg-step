@@ -65,13 +65,24 @@ include = ["src", "LICENSE.md", "README.md"]
 packages = ["src/step"]
 
 [tool.hatch.envs.default]
-dependencies = ["ipykernel", "pytest", "pytest-cov", "ruff"]
+dependencies = [
+  "furo",
+  "ipykernel",
+  "myst-parser",
+  "pytest",
+  "pytest-cov",
+  "ruff",
+  "sphinx",
+  "sphinx-autodoc-typehints",
+  "sphinx-copybutton"
+]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest --cov --cov-report=xml --junitxml=junit.xml -o junit_family=legacy"
 lint = "ruff check src tests"
 lint-fix = "ruff check src tests --fix"
 format = "ruff format src tests"
+docs = "sphinx-build -a -b html docs docs/_build/html"
 
 [tool.pytest.ini_options]
 addopts = ["--cov"]
