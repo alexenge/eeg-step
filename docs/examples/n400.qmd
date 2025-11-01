@@ -1,0 +1,40 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.14.7
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+# Example: ERP CORE data
+
+## Loading Python modules
+
+```{python}
+from step.datasets.erpcore import get_erpcore
+from step.epoching import EpochingConfig, EpochingPipeline
+from step.input import InputConfig, InputPipeline
+from step.preproc import PreprocConfig, PreprocPipeline
+
+n400_files = get_erpcore(component="N400", participants=3)
+
+input_config = InputConfig(n400_files["raw_files"][0], n400_files["log_files"][0])
+input_pipeline = InputPipeline(input_config)
+input_pipeline.run()
+
+preproc_config = PreprocConfig(downsample_sfreq=256, montage="biosemi64")
+preproc_pipeline = PreprocPipeline(preproc_config)
+preproc_pipeline.run(input_pipeline.raw)
+
+epoching_config = EpochingConfig(triggers=[211, 212, 221, 222])
+epoching_pipeline = EpochingPipeline(epoching_config)
+epoching_pipeline.run(preproc_pipeline.raw)  # No "log" because it has additional rows
+
+epoching_pipeline.epochs
+```
