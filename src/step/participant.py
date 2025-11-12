@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
+from .component import ComponentConfig, ComponentPipeline
 from .epoching import EpochingConfig, EpochingPipeline
 from .input import InputConfig, InputPipeline
 from .preproc import PreprocConfig, PreprocPipeline
-from .component import ComponentConfig, ComponentPipeline
 
 
 @dataclass
