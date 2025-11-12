@@ -46,7 +46,7 @@ class EpochingPipeline:
             self._add_log(log, participant_id)
 
         if self.config.reject is not None:
-            self._reject_bad_epochs()
+            self._get_bad_ixs()
 
     def _get_events(self, raw):
         """Get the events (e.g., stimulus onsets) from the raw data."""
@@ -136,20 +136,13 @@ class EpochingPipeline:
 
         return log, missing_ixs
 
-    def _reject_bad_epochs(self):
-        """Reject "bad" epochs based on a peak-to-peak amplitude threshold."""
+    def _get_bad_ixs(self):
+        """Get the indices of "bad" epochs based on peak-to-peak amplitude rejection."""
 
         reject_dict = {"eeg": self.config.reject * 1e-6}
-        # TODO: Decide if this needs to be done on a copy of the data
-        self.epochs.drop_bad(reject_dict)
-
-        self._get_bad_ixs()
-
-    def _get_bad_ixs(self):
-        """Get the indices of the bad epochs."""
-
-        drop_log = [elem for elem in self.epochs.drop_log if "IGNORED" not in elem]
-        self.bad_ixs = [ix for ix, elem in enumerate(drop_log) if elem != ()]
+        drop_log = self.epochs.copy().drop_bad(reject_dict).drop_log
+        drop_log_clean = [elem for elem in drop_log if "IGNORED" not in elem]
+        self.bad_ixs = [ix for ix, elem in enumerate(drop_log_clean) if elem != ()]
 
     def detect_bad_channels(self, threshold=3.0):
         """Automatically detect "bad" channels based on their standard
