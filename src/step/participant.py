@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from .epoching import EpochingConfig, EpochingPipeline
 from .input import InputConfig, InputPipeline
 from .preproc import PreprocConfig, PreprocPipeline
+from .component import ComponentConfig, ComponentPipeline
 
 
 @dataclass
@@ -12,6 +13,7 @@ class ParticipantConfig:
     input_config: InputConfig = None
     preproc_config: PreprocConfig = None
     epoching_config: EpochingConfig = None
+    component_config: ComponentConfig = None
 
 
 class ParticipantPipeline:
@@ -22,6 +24,7 @@ class ParticipantPipeline:
         self.input_pipeline = InputPipeline(config.input_config)
         self.preproc_pipeline = PreprocPipeline(config.preproc_config)
         self.epoching_pipeline = EpochingPipeline(config.epoching_config)
+        self.component_pipeline = ComponentPipeline(config.component_config)
 
     def run(self):
         self.input_pipeline.run()
@@ -35,6 +38,10 @@ class ParticipantPipeline:
         # Let's check once we added automatic break detection (#212).
         if self.preproc_pipeline.config.bad_channels == "auto":
             self._detect_bad_channels_and_rerun()
+
+        self.component_pipeline.run(
+            self.epoching_pipeline.epochs, self.epoching_pipeline.bad_ixs
+        )
 
     def _detect_bad_channels_and_rerun(self):
         bad_channels = self.epoching_pipeline.detect_bad_channels()

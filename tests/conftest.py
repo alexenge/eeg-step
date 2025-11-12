@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from step.component import ComponentConfig, ComponentPipeline
 from step.datasets.ucap import get_ucap
 from step.epoching import EpochingConfig, EpochingPipeline
 from step.input import InputConfig, InputPipeline
@@ -210,8 +211,38 @@ def sample_epoching_pipeline_match(
 
 
 @pytest.fixture(scope="session")
+def sample_component_config():
+    """Creates a ComponentConfig for the sample data."""
+
+    return ComponentConfig(
+        name="N2",
+        tmin=0.25,
+        tmax=0.35,
+        roi=["FC1", "FC2", "C1", "C2", "Cz"],
+        compute_se=True,
+    )
+
+
+@pytest.fixture(scope="session")
+def sample_component_pipeline(sample_component_config, sample_epoching_pipeline):
+    """Creates and runs a ComponentPipeline for the sample data."""
+
+    component_pipeline = ComponentPipeline(sample_component_config)
+
+    epochs = sample_epoching_pipeline.epochs
+    bad_ixs = sample_epoching_pipeline.bad_ixs
+
+    component_pipeline.run(epochs, bad_ixs)
+
+    return component_pipeline
+
+
+@pytest.fixture(scope="session")
 def sample_participant_config(
-    sample_input_config, sample_preproc_config, sample_epoching_config
+    sample_input_config,
+    sample_preproc_config,
+    sample_epoching_config,
+    sample_component_config,
 ):
     """Creates a ParticipantConfig for the sample data."""
 
@@ -219,6 +250,7 @@ def sample_participant_config(
         input_config=sample_input_config,
         preproc_config=sample_preproc_config,
         epoching_config=sample_epoching_config,
+        component_config=sample_component_config,
     )
 
 
