@@ -3,7 +3,7 @@ import pytest
 
 from step.component import ComponentConfig, ComponentPipeline
 from step.datasets.ucap import get_ucap
-from step.epoching import EpochingConfig, EpochingPipeline
+from step.epoch import EpochConfig, EpochPipeline
 from step.input import InputConfig, InputPipeline
 from step.participant import ParticipantConfig, ParticipantPipeline
 from step.preproc import PreprocConfig, PreprocPipeline
@@ -121,10 +121,10 @@ def sample_preproc_pipeline_besa(
 
 
 @pytest.fixture(scope="session")
-def sample_epoching_config():
-    """Creates an EpochingConfig for the sample data."""
+def sample_epoch_config():
+    """Creates an EpochConfig for the sample data."""
 
-    return EpochingConfig(
+    return EpochConfig(
         triggers=[
             201,
             202,
@@ -147,10 +147,10 @@ def sample_epoching_config():
 
 
 @pytest.fixture(scope="session")
-def sample_epoching_config_match():
-    """Creates an EpochingConfig for the sample data."""
+def sample_epoch_config_match():
+    """Creates an EpochConfig for the sample data."""
 
-    return EpochingConfig(
+    return EpochConfig(
         triggers=[
             201,
             202,
@@ -174,26 +174,26 @@ def sample_epoching_config_match():
 
 
 @pytest.fixture(scope="session")
-def sample_epoching_pipeline(
-    sample_epoching_config, sample_input_pipeline, sample_preproc_pipeline
+def sample_epoch_pipeline(
+    sample_epoch_config, sample_input_pipeline, sample_preproc_pipeline
 ):
-    """Creates and runs an EpochingPipeline for the sample data."""
+    """Creates and runs an EpochPipeline for the sample data."""
 
-    epoching_pipeline = EpochingPipeline(sample_epoching_config)
+    epoch_pipeline = EpochPipeline(sample_epoch_config)
     raw = sample_preproc_pipeline.raw
     log = sample_input_pipeline.log
-    epoching_pipeline.run(raw, log)
+    epoch_pipeline.run(raw, log)
 
-    return epoching_pipeline
+    return epoch_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_epoching_pipeline_match(
-    sample_epoching_config_match, sample_input_pipeline, sample_preproc_pipeline
+def sample_epoch_pipeline_match(
+    sample_epoch_config_match, sample_input_pipeline, sample_preproc_pipeline
 ):
-    """Creates and runs an EpochingPipeline for the sample data."""
+    """Creates and runs an EpochPipeline for the sample data."""
 
-    epoching_pipeline = EpochingPipeline(sample_epoching_config_match)
+    epoch_pipeline = EpochPipeline(sample_epoch_config_match)
     # Let's pretend some trials/triggers are missing from the EEG recording
     raw_to_match = sample_preproc_pipeline.raw.copy()
     ixs = np.concatenate(
@@ -205,9 +205,9 @@ def sample_epoching_pipeline_match(
     )
     raw_to_match.annotations.delete(ixs)
     log = sample_input_pipeline.log
-    epoching_pipeline.run(raw_to_match, log)
+    epoch_pipeline.run(raw_to_match, log)
 
-    return epoching_pipeline
+    return epoch_pipeline
 
 
 @pytest.fixture(scope="session")
@@ -224,13 +224,13 @@ def sample_component_config():
 
 
 @pytest.fixture(scope="session")
-def sample_component_pipeline(sample_component_config, sample_epoching_pipeline):
+def sample_component_pipeline(sample_component_config, sample_epoch_pipeline):
     """Creates and runs a ComponentPipeline for the sample data."""
 
     component_pipeline = ComponentPipeline(sample_component_config)
 
-    epochs = sample_epoching_pipeline.epochs
-    bad_ixs = sample_epoching_pipeline.bad_ixs
+    epochs = sample_epoch_pipeline.epochs
+    bad_ixs = sample_epoch_pipeline.bad_ixs
 
     component_pipeline.run(epochs, bad_ixs)
 
@@ -241,7 +241,7 @@ def sample_component_pipeline(sample_component_config, sample_epoching_pipeline)
 def sample_participant_config(
     sample_input_config,
     sample_preproc_config,
-    sample_epoching_config,
+    sample_epoch_config,
     sample_component_config,
 ):
     """Creates a ParticipantConfig for the sample data."""
@@ -249,7 +249,7 @@ def sample_participant_config(
     return ParticipantConfig(
         input_config=sample_input_config,
         preproc_config=sample_preproc_config,
-        epoching_config=sample_epoching_config,
+        epoch_config=sample_epoch_config,
         component_config=sample_component_config,
     )
 

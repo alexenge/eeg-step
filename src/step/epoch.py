@@ -8,8 +8,8 @@ from scipy.stats import zscore
 
 
 @dataclass
-class EpochingConfig:
-    """The configuration for the epoching pipeline."""
+class EpochConfig:
+    """The configuration for the epoch pipeline."""
 
     triggers: list[int] = None
     triggers_column: str = None
@@ -19,19 +19,18 @@ class EpochingConfig:
     reject = 200.0
 
 
-class EpochingPipeline:
-    """The epoching pipeline for segmenting the continuous EEG data into
-    epochs."""
+class EpochPipeline:
+    """The epoch pipeline for segmenting the continuous EEG data into epochs."""
 
     def __init__(self, config):
-        assert isinstance(config, EpochingConfig), (
-            "`config` must be an instance of the `EpochingConfig` class"
+        assert isinstance(config, EpochConfig), (
+            "`config` must be an instance of the `EpochConfig` class"
         )
 
         self.config = config
 
     def run(self, raw, log=None):
-        """Run the epoching pipeline."""
+        """Run the epoch pipeline."""
 
         assert isinstance(raw, BaseRaw), (
             "`raw` must be an instance of the `mne.io.BaseRaw` class"

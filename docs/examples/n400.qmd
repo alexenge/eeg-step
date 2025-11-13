@@ -18,7 +18,7 @@ jupyter:
 
 ```{python}
 from step.datasets.erpcore import get_erpcore
-from step.epoching import EpochingConfig, EpochingPipeline
+from step.epoch import EpochConfig, EpochPipeline
 from step.input import InputConfig, InputPipeline
 from step.preproc import PreprocConfig, PreprocPipeline
 
@@ -32,9 +32,9 @@ preproc_config = PreprocConfig(downsample_sfreq=256, montage="biosemi64")
 preproc_pipeline = PreprocPipeline(preproc_config)
 preproc_pipeline.run(input_pipeline.raw)
 
-epoching_config = EpochingConfig(triggers=[211, 212, 221, 222])
-epoching_pipeline = EpochingPipeline(epoching_config)
-epoching_pipeline.run(preproc_pipeline.raw)  # No "log" because it has additional rows
+epoch_config = EpochConfig(triggers=[211, 212, 221, 222])
+epoch_pipeline = EpochPipeline(epoch_config)
+epoch_pipeline.run(preproc_pipeline.raw)  # No "log" because it has additional rows
 
-epoching_pipeline.epochs
+epoch_pipeline.epochs
 ```

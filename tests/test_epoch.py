@@ -2,15 +2,15 @@ import numpy as np
 import pandas as pd
 from mne import Epochs
 
-from step.epoching import EpochingConfig, EpochingPipeline
+from step.epoch import EpochConfig, EpochPipeline
 
 
-def test_epoching_config(sample_epoching_config):
-    """Tests the EpochingConfig class."""
+def test_epoch_config(sample_epoch_config):
+    """Tests the EpochConfig class."""
 
-    config = sample_epoching_config
+    config = sample_epoch_config
 
-    assert isinstance(config, EpochingConfig)
+    assert isinstance(config, EpochConfig)
     assert config.triggers == [
         201,
         202,
@@ -36,12 +36,12 @@ def test_epoching_config(sample_epoching_config):
     assert config.reject == 200.0
 
 
-def test_epoching_pipeline(sample_epoching_pipeline):
-    """Tests the EpochingPipeline class."""
+def test_epoch_pipeline(sample_epoch_pipeline):
+    """Tests the EpochPipeline class."""
 
-    pipeline = sample_epoching_pipeline
+    pipeline = sample_epoch_pipeline
 
-    assert isinstance(pipeline, EpochingPipeline)
+    assert isinstance(pipeline, EpochPipeline)
     assert isinstance(pipeline.events, np.ndarray)
     assert isinstance(pipeline.event_id, dict)
     assert set(pipeline.event_id.values()) == set(pipeline.config.triggers)
@@ -53,10 +53,10 @@ def test_epoching_pipeline(sample_epoching_pipeline):
     assert len(pipeline.bad_ixs) > 0
 
 
-def test_epoching_pipeline_match(sample_epoching_pipeline_match):
-    """Tests the EpochingPipeline class with a triggers column to match."""
+def test_epoch_pipeline_match(sample_epoch_pipeline_match):
+    """Tests the EpochPipeline class with a triggers column to match."""
 
-    pipeline = sample_epoching_pipeline_match
+    pipeline = sample_epoch_pipeline_match
 
     assert len(pipeline.epochs) > 0
     assert len(pipeline.epochs) < 1920
