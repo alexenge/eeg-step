@@ -71,10 +71,6 @@ html_theme = "furo"
 html_title = f"{project} {version}"
 html_show_sourcelink = True
 
-# Add your static files (custom CSS, logo, etc.)
-html_static_path = ["_static"]
-html_css_files = []
-
 # -- Options for TODOs -------------------------------------------------------
 todo_include_todos = True
 
