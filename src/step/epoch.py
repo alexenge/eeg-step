@@ -141,6 +141,7 @@ class EpochPipeline:
         reject_dict = {"eeg": self.config.reject * 1e-6}
         drop_log = self.epochs.copy().drop_bad(reject_dict).drop_log
         drop_log_clean = [elem for elem in drop_log if "IGNORED" not in elem]
+        self.drop_log_clean = drop_log_clean
         self.bad_ixs = [ix for ix, elem in enumerate(drop_log_clean) if elem != ()]
 
     def detect_bad_channels(self, threshold=3.0):
