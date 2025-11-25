@@ -4,10 +4,10 @@ from mne import Epochs
 from step.component import ComponentConfig, ComponentPipeline
 
 
-def test_component_config(sample_component_config):
+def test_component_config(sample_component_config_n2):
     """Test the ComponentConfig class."""
 
-    config = sample_component_config
+    config = sample_component_config_n2
 
     assert isinstance(config, ComponentConfig)
     assert isinstance(config.name, str)

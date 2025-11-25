@@ -13,7 +13,7 @@ class ParticipantConfig:
     input_config: InputConfig = None
     preproc_config: PreprocConfig = None
     epoch_config: EpochConfig = None
-    component_config: ComponentConfig = None
+    component_configs: list[ComponentConfig] = None
 
 
 class ParticipantPipeline:
@@ -24,7 +24,9 @@ class ParticipantPipeline:
         self.input_pipeline = InputPipeline(config.input_config)
         self.preproc_pipeline = PreprocPipeline(config.preproc_config)
         self.epoch_pipeline = EpochPipeline(config.epoch_config)
-        self.component_pipeline = ComponentPipeline(config.component_config)
+        self.component_pipelines = [
+            ComponentPipeline(cfg) for cfg in config.component_configs
+        ]
 
     def run(self):
         self.input_pipeline.run()
@@ -39,9 +41,10 @@ class ParticipantPipeline:
         if self.preproc_pipeline.config.bad_channels == "auto":
             self._detect_bad_channels_and_rerun()
 
-        self.component_pipeline.run(
-            self.epoch_pipeline.epochs, self.epoch_pipeline.bad_ixs
-        )
+        for component_pipeline in self.component_pipelines:
+            component_pipeline.run(
+                self.epoch_pipeline.epochs, self.epoch_pipeline.bad_ixs
+            )
 
     def _detect_bad_channels_and_rerun(self):
         bad_channels = self.epoch_pipeline.detect_bad_channels()

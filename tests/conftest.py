@@ -211,8 +211,8 @@ def sample_epoch_pipeline_match(
 
 
 @pytest.fixture(scope="session")
-def sample_component_config():
-    """Creates a ComponentConfig for the sample data."""
+def sample_component_config_n2():
+    """Creates a ComponentConfig for the N2 component."""
 
     return ComponentConfig(
         name="N2",
@@ -224,10 +224,30 @@ def sample_component_config():
 
 
 @pytest.fixture(scope="session")
-def sample_component_pipeline(sample_component_config, sample_epoch_pipeline):
+def sample_component_config_p3b():
+    """Creates a ComponentConfig for the P3b component."""
+
+    return ComponentConfig(
+        name="P3b",
+        tmin=0.4,
+        tmax=0.55,
+        roi=["CP3", "CP1", "CPz", "CP2", "CP4", "P3", "Pz", "P4", "PO3", "POz", "PO4"],
+        compute_se=False,
+    )
+
+
+@pytest.fixture(scope="session")
+def sample_component_configs(sample_component_config_n2, sample_component_config_p3b):
+    """Creates a list of ComponentConfigs for the sample data."""
+
+    return [sample_component_config_n2, sample_component_config_p3b]
+
+
+@pytest.fixture(scope="session")
+def sample_component_pipeline(sample_component_config_n2, sample_epoch_pipeline):
     """Creates and runs a ComponentPipeline for the sample data."""
 
-    component_pipeline = ComponentPipeline(sample_component_config)
+    component_pipeline = ComponentPipeline(sample_component_config_n2)
 
     epochs = sample_epoch_pipeline.epochs
     bad_ixs = sample_epoch_pipeline.bad_ixs
@@ -242,7 +262,7 @@ def sample_participant_config(
     sample_input_config,
     sample_preproc_config,
     sample_epoch_config,
-    sample_component_config,
+    sample_component_configs,
 ):
     """Creates a ParticipantConfig for the sample data."""
 
@@ -250,7 +270,7 @@ def sample_participant_config(
         input_config=sample_input_config,
         preproc_config=sample_preproc_config,
         epoch_config=sample_epoch_config,
-        component_config=sample_component_config,
+        component_configs=sample_component_configs,
     )
 
 
