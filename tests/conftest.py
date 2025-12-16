@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from step.average import AverageConfig, AveragePipeline
 from step.component import ComponentConfig, ComponentPipeline
 from step.datasets.ucap import get_ucap
 from step.epoch import EpochConfig, EpochPipeline
@@ -258,11 +259,67 @@ def sample_component_pipeline(sample_component_config_n2, sample_epoch_pipeline)
 
 
 @pytest.fixture(scope="session")
+def sample_average_config_blurr():
+    """Creates an AverageConfig."""
+
+    return AverageConfig(name="blurr", query="n_b == 'blurr'")
+
+
+@pytest.fixture(scope="session")
+def sample_average_config_normal():
+    """Creates an AverageConfig."""
+
+    return AverageConfig(name="normal", query="n_b == 'normal'")
+
+
+@pytest.fixture(scope="session")
+def sample_average_configs(sample_average_config_blurr, sample_average_config_normal):
+    """Creates a list of AverageConfigs."""
+
+    return [sample_average_config_blurr, sample_average_config_normal]
+
+
+@pytest.fixture(scope="session")
+def sample_average_pipeline_blurr(
+    sample_average_config_blurr,
+    sample_epoch_pipeline,
+):
+    """Creates and runs an AveragePipeline for the sample data."""
+
+    average_pipeline = AveragePipeline(sample_average_config_blurr)
+
+    epochs = sample_epoch_pipeline.epochs
+    bad_ixs = sample_epoch_pipeline.bad_ixs
+
+    average_pipeline.run(epochs, bad_ixs)
+
+    return average_pipeline
+
+
+@pytest.fixture(scope="session")
+def sample_average_pipeline_normal(
+    sample_average_config_normal,
+    sample_epoch_pipeline,
+):
+    """Creates and runs an AveragePipeline for the sample data."""
+
+    average_pipeline = AveragePipeline(sample_average_config_normal)
+
+    epochs = sample_epoch_pipeline.epochs
+    bad_ixs = sample_epoch_pipeline.bad_ixs
+
+    average_pipeline.run(epochs, bad_ixs)
+
+    return average_pipeline
+
+
+@pytest.fixture(scope="session")
 def sample_participant_config(
     sample_input_config,
     sample_preproc_config,
     sample_epoch_config,
     sample_component_configs,
+    sample_average_configs,
 ):
     """Creates a ParticipantConfig for the sample data."""
 
@@ -271,6 +328,7 @@ def sample_participant_config(
         preproc_config=sample_preproc_config,
         epoch_config=sample_epoch_config,
         component_configs=sample_component_configs,
+        average_configs=sample_average_configs,
     )
 
 

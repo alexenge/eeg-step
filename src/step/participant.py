@@ -4,6 +4,7 @@ from .component import ComponentConfig, ComponentPipeline
 from .epoch import EpochConfig, EpochPipeline
 from .input import InputConfig, InputPipeline
 from .preproc import PreprocConfig, PreprocPipeline
+from .average import AverageConfig, AveragePipeline
 
 
 @dataclass
@@ -14,6 +15,7 @@ class ParticipantConfig:
     preproc_config: PreprocConfig = None
     epoch_config: EpochConfig = None
     component_configs: list[ComponentConfig] = None
+    average_configs: list[AverageConfig] = None
 
 
 class ParticipantPipeline:
@@ -26,6 +28,9 @@ class ParticipantPipeline:
         self.epoch_pipeline = EpochPipeline(config.epoch_config)
         self.component_pipelines = [
             ComponentPipeline(cfg) for cfg in config.component_configs
+        ]
+        self.average_pipelines = [
+            AveragePipeline(cfg) for cfg in config.average_configs
         ]
 
     def run(self):
@@ -44,6 +49,12 @@ class ParticipantPipeline:
         for component_pipeline in self.component_pipelines:
             component_pipeline.run(
                 self.epoch_pipeline.epochs, self.epoch_pipeline.bad_ixs
+            )
+
+        for average_pipeline in self.average_pipelines:
+            average_pipeline.run(
+                self.epoch_pipeline.epochs,
+                self.epoch_pipeline.bad_ixs,
             )
 
     def _detect_bad_channels_and_rerun(self):
