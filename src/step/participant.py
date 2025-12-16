@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
+from .average import AverageConfig, AveragePipeline
 from .component import ComponentConfig, ComponentPipeline
 from .epoch import EpochConfig, EpochPipeline
 from .input import InputConfig, InputPipeline
 from .preproc import PreprocConfig, PreprocPipeline
-from .average import AverageConfig, AveragePipeline
 
 
 @dataclass

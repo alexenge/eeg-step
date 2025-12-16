@@ -1,7 +1,7 @@
+import numpy as np
 from mne import Evoked
 
 from step.average import AverageConfig, AveragePipeline
-import numpy as np
 
 
 def test_average_config(sample_average_config_blurr):
