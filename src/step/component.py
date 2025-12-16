@@ -34,17 +34,17 @@ class ComponentPipeline:
         else:
             self.roi = [self.config.roi]
 
-        self.add_roi_channel()
+        self._add_roi_channel()
 
-        self.get_data()
+        self._get_data()
 
-        self.compute_amplitudes()
+        self._compute_amplitudes()
 
         if self.config.compute_se:
             self.name_se = f"{self.config.name}_se"
-            self.compute_standard_errors()
+            self._compute_standard_errors()
 
-    def add_roi_channel(self):
+    def _add_roi_channel(self):
         """Add a new virtual channel by averaging over the region of interest."""
 
         roi_dict = {self.config.name: pick_channels(self.epochs.ch_names, self.roi)}
@@ -53,7 +53,7 @@ class ComponentPipeline:
         self.epochs.add_channels([epochs_roi], force_update_info=True)
         self.epochs.set_channel_types({self.config.name: "misc"})
 
-    def get_data(self):
+    def _get_data(self):
         """Extract the time series data for the time window and region of interest."""
 
         self.data = (
@@ -63,7 +63,7 @@ class ComponentPipeline:
             .get_data(units="uAU")  # Arbitrary Units, actually microvolts
         )
 
-    def compute_amplitudes(self):
+    def _compute_amplitudes(self):
         """Compute single-trial mean amplitudes by averaging over the time window in
         the region of interest."""
 
@@ -71,7 +71,7 @@ class ComponentPipeline:
         self.amplitudes[self.bad_ixs] = np.nan
         self.epochs.metadata[self.config.name] = self.amplitudes
 
-    def compute_standard_errors(self):
+    def _compute_standard_errors(self):
         """Compute single-trial standard errors by computing the standard error
         over the time window in the region of interest."""
 
