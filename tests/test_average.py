@@ -35,9 +35,31 @@ def test_average_pipelines(
     assert evoked_blurr.comment != evoked_normal.comment
     assert evoked_blurr.data.shape == evoked_normal.data.shape
 
-    # TODO: Take channels + time window from component definition
-    mean_blurr = evoked_blurr.pick_channels(["Pz"]).crop(tmin=0.4, tmax=0.5).data.mean()
-    mean_normal = (
-        evoked_normal.pick_channels(["Pz"]).crop(tmin=0.4, tmax=0.5).data.mean()
+    p3b_channels = [
+        "CP3",
+        "CP1",
+        "CPz",
+        "CP2",
+        "CP4",
+        "P3",
+        "Pz",
+        "P4",
+        "PO3",
+        "POz",
+        "PO4",
+    ]
+    p3b_tmin = 0.4
+    p3b_tmax = 0.55
+
+    mean_blurr = (
+        evoked_blurr.pick_channels(p3b_channels)
+        .crop(tmin=p3b_tmin, tmax=p3b_tmax)
+        .data.mean()
     )
-    assert (mean_normal - mean_blurr) > np.float64(1.0e-06)  # Expeced P3 effect
+    mean_normal = (
+        evoked_normal.pick_channels(p3b_channels)
+        .crop(tmin=p3b_tmin, tmax=p3b_tmax)
+        .data.mean()
+    )
+
+    assert (mean_normal - mean_blurr) > np.float64(1.0e-06)  # Expeced P3b effect
