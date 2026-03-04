@@ -26,26 +26,17 @@ class InputPipeline:
         )
         self.config = config
 
+        self._get_participant_id()
+
     def run(self):
         """Run the input pipeline."""
 
         self._read_raw()
-
-        self._get_participant_id()
+        self._add_participant_config_to_raw()
 
         self._read_log()
 
         self._read_besa()
-
-    def _read_raw(self):
-        """Read EEG raw data from the specified file(s)."""
-
-        if is_list_like(self.config.raw_file):
-            raws = [read_raw(elem, preload=True) for elem in self.config.raw_file]
-            self.raw = concatenate_raws(raws)
-
-        else:
-            self.raw = read_raw(self.config.raw_file, preload=True)
 
     def _get_participant_id(self):
         """Generate a participant ID based on the raw file name(s)."""
@@ -57,10 +48,23 @@ class InputPipeline:
         else:
             participant_id = Path(self.config.raw_file).stem
 
-        if self.raw.info["subject_info"] is not None:
-            self.raw.info["subject_info"].update({"his_id": participant_id})
+        self.participant_id = participant_id
+
+    def _read_raw(self):
+        """Read EEG raw data from the specified file(s)."""
+
+        if is_list_like(self.config.raw_file):
+            raws = [read_raw(elem, preload=True) for elem in self.config.raw_file]
+            self.raw = concatenate_raws(raws)
+
         else:
-            self.raw.info["subject_info"] = {"his_id": participant_id}
+            self.raw = read_raw(self.config.raw_file, preload=True)
+
+    def _add_participant_config_to_raw(self):
+        if self.raw.info["subject_info"] is not None:
+            self.raw.info["subject_info"].update({"his_id": self.participant_id})
+        else:
+            self.raw.info["subject_info"] = {"his_id": self.participant_id}
 
     def _read_log(self):
         """Read the behavioral log file with information about each EEG

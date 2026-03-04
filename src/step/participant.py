@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from .average import AverageConfig, AveragePipeline
-from .component import ComponentConfig, ComponentPipeline
-from .epoch import EpochConfig, EpochPipeline
+# from .average import AverageConfig, AveragePipeline
+# from .component import ComponentConfig, ComponentPipeline
+# from .epoch import EpochConfig, EpochPipeline
 from .input import InputConfig, InputPipeline
 from .preproc import PreprocConfig, PreprocPipeline
 
@@ -12,10 +12,12 @@ class ParticipantConfig:
     """The configuration for the participant pipeline."""
 
     input_config: InputConfig = None
- #   preproc_config: PreprocConfig = None
- #   epoch_config: EpochConfig = None
- #   component_configs: list[ComponentConfig] = None
- #   average_configs: list[AverageConfig] = None
+    preproc_config: PreprocConfig = None
+
+
+#   epoch_config: EpochConfig = None
+#   component_configs: list[ComponentConfig] = None
+#   average_configs: list[AverageConfig] = None
 
 
 class ParticipantPipeline:
@@ -24,19 +26,20 @@ class ParticipantPipeline:
 
     def __init__(self, config: ParticipantConfig):
         self.input_pipeline = InputPipeline(config.input_config)
-     #   self.preproc_pipeline = PreprocPipeline(config.preproc_config)
-     #   self.epoch_pipeline = EpochPipeline(config.epoch_config)
-     #   self.component_pipelines = [
-     #       ComponentPipeline(cfg) for cfg in config.component_configs
-     #   ]
-     #   self.average_pipelines = [
-     #       AveragePipeline(cfg) for cfg in config.average_configs
-     #   ]
+        self.preproc_pipeline = PreprocPipeline(config.preproc_config)
+
+    #   self.epoch_pipeline = EpochPipeline(config.epoch_config)
+    #   self.component_pipelines = [
+    #       ComponentPipeline(cfg) for cfg in config.component_configs
+    #   ]
+    #   self.average_pipelines = [
+    #       AveragePipeline(cfg) for cfg in config.average_configs
+    #   ]
 
     def run(self):
         self.input_pipeline.run()
 
-    #     self.preproc_pipeline.run(self.input_pipeline.raw, self.input_pipeline.besa)
+        self.preproc_pipeline.run(self.input_pipeline.raw, self.input_pipeline.besa)
 
     #     self.epoch_pipeline.run(self.preproc_pipeline.raw, self.input_pipeline.log)
 
@@ -60,7 +63,7 @@ class ParticipantPipeline:
     # def _detect_bad_channels_and_rerun(self):
     #     bad_channels = self.epoch_pipeline.detect_bad_channels()
 
-        # if len(bad_channels) > 0:
-        #     self.preproc_pipeline.config.bad_channels = bad_channels
-        #     self.preproc_pipeline.run(self.input_pipeline.raw, self.input_pipeline.besa)
-        #     self.epoch_pipeline.run(self.preproc_pipeline.raw, self.input_pipeline.log)
+    # if len(bad_channels) > 0:
+    #     self.preproc_pipeline.config.bad_channels = bad_channels
+    #     self.preproc_pipeline.run(self.input_pipeline.raw, self.input_pipeline.besa)
+    #     self.epoch_pipeline.run(self.preproc_pipeline.raw, self.input_pipeline.log)

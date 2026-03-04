@@ -5,6 +5,7 @@ from step.average import AverageConfig, AveragePipeline
 from step.component import ComponentConfig, ComponentPipeline
 from step.datasets.ucap import get_ucap
 from step.epoch import EpochConfig, EpochPipeline
+from step.group import GroupPipeline
 from step.input import InputConfig, InputPipeline
 from step.participant import ParticipantConfig, ParticipantPipeline
 from step.preproc import PreprocConfig, PreprocPipeline
@@ -326,9 +327,9 @@ def sample_participant_config(
     return ParticipantConfig(
         input_config=sample_input_config,
         preproc_config=sample_preproc_config,
-        epoch_config=sample_epoch_config,
-        component_configs=sample_component_configs,
-        average_configs=sample_average_configs,
+        # epoch_config=sample_epoch_config,
+        # component_configs=sample_component_configs,
+        # average_configs=sample_average_configs,
     )
 
 
@@ -340,3 +341,15 @@ def sample_participant_pipeline(sample_participant_config):
     participant_pipeline.run()
 
     return participant_pipeline
+
+
+@pytest.fixture(scope="session")
+def sample_group_pipeline(sample_data):
+    group_pipeline = GroupPipeline(
+        raw_files=sample_data["raw_files"],
+        log_files=sample_data["log_files"],
+        besa_files=sample_data["besa_files"],
+    )
+    group_pipeline.run()
+
+    return group_pipeline
