@@ -12,6 +12,7 @@ from pandas.api.types import is_list_like
 class InputConfig:
     """The configuration for the input pipeline."""
 
+    participant_id: str
     raw_file: str | PathLike | list[str | PathLike]
     log_file: str | PathLike | pd.DataFrame = None
     besa_file: str | PathLike = None
@@ -26,29 +27,15 @@ class InputPipeline:
         )
         self.config = config
 
-        self._get_participant_id()
-
     def run(self):
         """Run the input pipeline."""
 
         self._read_raw()
-        self._add_participant_config_to_raw()
+        self._add_participant_id_to_raw()
 
         self._read_log()
 
         self._read_besa()
-
-    def _get_participant_id(self):
-        """Generate a participant ID based on the raw file name(s)."""
-
-        if is_list_like(self.config.raw_file):
-            ids = [Path(elem).stem for elem in self.config.raw_file]
-            participant_id = "_".join(ids)
-
-        else:
-            participant_id = Path(self.config.raw_file).stem
-
-        self.participant_id = participant_id
 
     def _read_raw(self):
         """Read EEG raw data from the specified file(s)."""
@@ -60,11 +47,11 @@ class InputPipeline:
         else:
             self.raw = read_raw(self.config.raw_file, preload=True)
 
-    def _add_participant_config_to_raw(self):
+    def _add_participant_id_to_raw(self):
         if self.raw.info["subject_info"] is not None:
-            self.raw.info["subject_info"].update({"his_id": self.participant_id})
+            self.raw.info["subject_info"].update({"his_id": self.config.participant_id})
         else:
-            self.raw.info["subject_info"] = {"his_id": self.participant_id}
+            self.raw.info["subject_info"] = {"his_id": self.config.participant_id}
 
     def _read_log(self):
         """Read the behavioral log file with information about each EEG

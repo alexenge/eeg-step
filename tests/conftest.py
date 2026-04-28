@@ -349,6 +349,7 @@ def sample_group_pipeline(sample_data):
         raw_files=sample_data["raw_files"],
         log_files=sample_data["log_files"],
         besa_files=sample_data["besa_files"],
+        downsample_sfreq=100,
     )
     group_pipeline.run()
 

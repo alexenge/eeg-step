@@ -2,6 +2,7 @@ from os import PathLike
 
 import pandas as pd
 
+from .helpers import _dict_to_list, _get_participant_id
 from .input import InputConfig
 from .participant import ParticipantConfig, ParticipantPipeline
 from .preproc import PreprocConfig
@@ -27,10 +28,41 @@ class GroupPipeline:
         highpass_freq: float = 0.1,
         lowpass_freq: float = 40.0,
     ):
+
+        self.raw_files = raw_files
+        self.log_files = log_files
+        self.besa_files = besa_files
+        self.downsample_sfreq = downsample_sfreq
+        self.heog_channels = heog_channels
+        self.veog_channels = veog_channels
+        self.montage = montage
+        self.bad_channels = bad_channels
+        self.ref_channels = ref_channels
+        self.ica_method = ica_method
+        self.ica_n_components = ica_n_components
+        self.ica_eog_channels = ica_eog_channels
+        self.highpass_freq = highpass_freq
+        self.lowpass_freq = lowpass_freq
+
+        self._get_participant_ids()
+        self._get_n_participants()
+        self._process_bad_channels()
+
         self.participant_pipelines = dict()
-        for raw_file, log_file, besa_file in zip(raw_files, log_files, besa_files):
+        for (
+            raw_file,
+            log_file,
+            besa_file,
+            participant_id,
+            participant_bad_channels,
+        ) in zip(
+            raw_files, log_files, besa_files, self.participant_ids, self.bad_channels_
+        ):
             input_config = InputConfig(
-                raw_file=raw_file, log_file=log_file, besa_file=besa_file
+                raw_file=raw_file,
+                log_file=log_file,
+                besa_file=besa_file,
+                participant_id=participant_id,
             )
 
             preproc_config = PreprocConfig(
@@ -38,7 +70,7 @@ class GroupPipeline:
                 heog_channels=heog_channels,
                 veog_channels=veog_channels,
                 montage=montage,
-                bad_channels=bad_channels,
+                bad_channels=participant_bad_channels,
                 ref_channels=ref_channels,
                 ica_method=ica_method,
                 ica_n_components=ica_n_components,
@@ -49,22 +81,29 @@ class GroupPipeline:
 
             participant_config = ParticipantConfig(input_config, preproc_config)
             participant_pipeline = ParticipantPipeline(participant_config)
-            participant_id = participant_pipeline.input_pipeline.participant_id
             self.participant_pipelines[participant_id] = participant_pipeline
 
     def run(self):
+
+        self._get_participant_ids()
+
         for participant_pipeline in self.participant_pipelines.values():
             participant_pipeline.run()
 
+    def _get_participant_ids(self):
+
+        self.participant_ids = [
+            _get_participant_id(raw_file) for raw_file in self.raw_files
+        ]
+
+    def _get_n_participants(self):
+        self.n_participants = len(self.participant_ids)
+
     def _process_bad_channels(self):
-        n_participants = len(self.raw_files)
 
         if self.bad_channels is list:
             self.bad_channels_ = self.bad_channels
         elif self.bad_channels == "auto":
-            self.bad_channels_ = ["auto"] * n_participants
+            self.bad_channels_ = ["auto"] * self.n_participants
         elif self.bad_channels is dict:
-            print("Oh nooooo!")
-
-    def _get_participant_ids(self):
-        return True
+            self.bad_channels_ = _dict_to_list(self.bad_channels, self.participant_ids)
