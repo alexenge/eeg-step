@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -345,9 +347,13 @@ def sample_participant_pipeline(sample_participant_config):
 
 @pytest.fixture(scope="session")
 def sample_group_pipeline(sample_data):
+    # For the log files, we use the parent folder instead of the file list, so
+    # that the functionality of locating relevant files from a folder also gets tested.
+    log_files = Path(sample_data["log_files"][0]).parent
+
     group_pipeline = GroupPipeline(
         raw_files=sample_data["raw_files"],
-        log_files=sample_data["log_files"],
+        log_files=log_files,
         besa_files=sample_data["besa_files"],
         downsample_sfreq=100,
     )

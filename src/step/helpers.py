@@ -3,7 +3,21 @@ from pathlib import Path
 from pandas.api.types import is_list_like
 
 
+def _process_files_input(files_input, file_extensions):
+    """Process the "files" input arguments of the pipeline from a list or folder
+    path."""
+
+    if is_list_like(files_input):
+        return files_input
+    else:
+        files = []
+        for ext in file_extensions:
+            files.extend(Path(files_input).glob(f"*.{ext}"))
+        return files
+
+
 def _dict_to_list(d, key_list, default=None):
+    """Convert a dictionary to a list based on a list of keys."""
 
     l = []
     for key, value in d.items():
