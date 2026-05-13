@@ -22,36 +22,81 @@ def sample_data():
 
 
 @pytest.fixture(scope="session")
-def sample_input_config(sample_data):
+def sample_raw_file(sample_data):
+    """Returns the raw file for the first participant in the sample data."""
+
+    return sample_data["raw_files"][0]
+
+
+@pytest.fixture(scope="session")
+def sample_participant_id(sample_raw_file):
+    """Returns the participant ID for the first participant in the sample data."""
+
+    return _get_participant_id(sample_raw_file)
+
+
+@pytest.fixture(scope="session")
+def sample_log_file(sample_data):
+    """Returns the log file for the first participant in the sample data."""
+
+    return sample_data["log_files"][0]
+
+
+@pytest.fixture(scope="session")
+def sample_besa_file(sample_data):
+    """Returns the BESA file for the first participant in the sample data."""
+
+    return sample_data["besa_files"][0]
+
+
+@pytest.fixture(scope="session")
+def sample_input_config(sample_raw_file, sample_log_file, sample_participant_id):
     """Creates an InputConfig for the sample data."""
 
     return InputConfig(
-        participant_id=_get_participant_id(sample_data["raw_files"][0]),
-        raw_file=sample_data["raw_files"][0],
-        log_file=sample_data["log_files"][0],
+        participant_id=sample_participant_id,
+        raw_file=sample_raw_file,
+        log_file=sample_log_file,
     )
 
 
 @pytest.fixture(scope="session")
-def sample_input_config_besa(sample_data):
+def sample_input_config_besa(
+    sample_raw_file, sample_log_file, sample_besa_file, sample_participant_id
+):
     """Creates an InputConfig for the sample data incl. BESA file."""
 
     return InputConfig(
-        participant_id=_get_participant_id(sample_data["raw_files"][0]),
-        raw_file=sample_data["raw_files"][0],
-        log_file=sample_data["log_files"][0],
-        besa_file=sample_data["besa_files"][0],
+        participant_id=sample_participant_id,
+        raw_file=sample_raw_file,
+        log_file=sample_log_file,
+        besa_file=sample_besa_file,
     )
 
 
 @pytest.fixture(scope="session")
-def sample_input_config_combine(sample_data):
+def sample_raw_file_combine(sample_data):
+    """Returns the raw files for the first two participants in the sample data."""
+
+    return sample_data["raw_files"][0:2]
+
+
+@pytest.fixture(scope="session")
+def sample_participant_id_combine(sample_raw_file_combine):
+    """Returns a combined participant ID for the first two participants in the
+    sample data."""
+
+    return _get_participant_id(sample_raw_file_combine)
+
+
+@pytest.fixture(scope="session")
+def sample_input_config_combine(sample_raw_file_combine, sample_participant_id_combine):
     """Creates an InputConfig for the case when a participant has
     multiple EEG files that need to be combined."""
 
     return InputConfig(
-        participant_id=_get_participant_id(sample_data["raw_files"][0:2]),
-        raw_file=sample_data["raw_files"][0:2],
+        participant_id=sample_participant_id_combine,
+        raw_file=sample_raw_file_combine,
     )
 
 
@@ -132,56 +177,41 @@ def sample_preproc_pipeline_besa(
 
 
 @pytest.fixture(scope="session")
-def sample_epoch_config():
-    """Creates an EpochConfig for the sample data."""
+def sample_triggers():
+    """Returns a list of triggers for the sample data."""
 
-    return EpochConfig(
-        triggers=[
-            201,
-            202,
-            203,
-            204,
-            205,
-            206,
-            207,
-            208,
-            211,
-            212,
-            213,
-            214,
-            215,
-            216,
-            217,
-            218,
-        ]
-    )
+    return [
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        211,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+    ]
 
 
 @pytest.fixture(scope="session")
-def sample_epoch_config_match():
+def sample_epoch_config(sample_triggers):
     """Creates an EpochConfig for the sample data."""
 
-    return EpochConfig(
-        triggers=[
-            201,
-            202,
-            203,
-            204,
-            205,
-            206,
-            207,
-            208,
-            211,
-            212,
-            213,
-            214,
-            215,
-            216,
-            217,
-            218,
-        ],
-        triggers_column="bot",
-    )
+    return EpochConfig(triggers=sample_triggers)
+
+
+@pytest.fixture(scope="session")
+def sample_epoch_config_match(sample_triggers):
+    """Creates an EpochConfig for the sample data."""
+
+    return EpochConfig(triggers=sample_triggers, triggers_column="bot")
 
 
 @pytest.fixture(scope="session")
@@ -353,36 +383,48 @@ def sample_participant_pipeline(sample_participant_config):
 
 
 @pytest.fixture(scope="session")
-def sample_group_pipeline(
-    sample_data, sample_component_configs, sample_average_configs
-):
-    # For the log files, we use the parent folder instead of the file list, so
-    # that the functionality of locating relevant files from a folder also gets tested.
-    log_files = Path(sample_data["log_files"][0]).parent
+def sample_raw_files(sample_data):
+    """Returns the raw files for all participants in the sample data."""
 
+    return sample_data["raw_files"]
+
+
+@pytest.fixture(scope="session")
+def sample_log_files(sample_data):
+    """Returns the log files for all participants in the sample data."""
+
+    return sample_data["log_files"]
+
+
+@pytest.fixture(scope="session")
+def sample_log_files_folder(sample_data):
+    """Returns the folder containing the log files for the sample data."""
+
+    return Path(sample_data["log_files"][0]).parent
+
+
+@pytest.fixture(scope="session")
+def sample_besa_files(sample_data):
+    """Returns the BESA files for all participants in the sample data."""
+
+    return sample_data["besa_files"]
+
+
+@pytest.fixture(scope="session")
+def sample_group_pipeline(
+    sample_raw_files,
+    sample_log_files_folder,
+    sample_besa_files,
+    sample_triggers,
+    sample_component_configs,
+    sample_average_configs,
+):
     group_pipeline = GroupPipeline(
-        raw_files=sample_data["raw_files"],
-        log_files=log_files,
-        besa_files=sample_data["besa_files"],
+        raw_files=sample_raw_files,
+        log_files=sample_log_files_folder,
+        besa_files=sample_besa_files,
         downsample_sfreq=100,
-        triggers=[
-            201,
-            202,
-            203,
-            204,
-            205,
-            206,
-            207,
-            208,
-            211,
-            212,
-            213,
-            214,
-            215,
-            216,
-            217,
-            218,
-        ],
+        triggers=sample_triggers,
         component_configs=sample_component_configs,
         average_configs=sample_average_configs,
     )
@@ -393,32 +435,20 @@ def sample_group_pipeline(
 
 @pytest.fixture(scope="session")
 def sample_group_pipeline_bad_channels(
-    sample_data, sample_component_configs, sample_average_configs
+    sample_raw_files,
+    sample_log_files,
+    sample_besa_files,
+    sample_triggers,
+    sample_component_configs,
+    sample_average_configs,
 ):
     group_pipeline = GroupPipeline(
-        raw_files=sample_data["raw_files"],
-        log_files=sample_data["log_files"],
-        besa_files=sample_data["besa_files"],
+        raw_files=sample_raw_files,
+        log_files=sample_log_files,
+        besa_files=sample_besa_files,
         downsample_sfreq=100,
         bad_channels={"09": ["Fp1", "PO8"], "12": []},
-        triggers=[
-            201,
-            202,
-            203,
-            204,
-            205,
-            206,
-            207,
-            208,
-            211,
-            212,
-            213,
-            214,
-            215,
-            216,
-            217,
-            218,
-        ],
+        triggers=sample_triggers,
         component_configs=sample_component_configs,
         average_configs=sample_average_configs,
     )
