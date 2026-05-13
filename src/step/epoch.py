@@ -41,8 +41,7 @@ class EpochPipeline:
         self._create_epochs(raw)
 
         if log is not None:
-            participant_id = raw.info["subject_info"]["his_id"]
-            self._add_log(log, participant_id)
+            self._add_log(log)
 
         if self.config.reject is not None:
             self._get_bad_ixs()
@@ -80,15 +79,13 @@ class EpochPipeline:
         # Drop the last sample to produce a nice even number
         self.epochs.crop(tmin=None, tmax=self.config.tmax, include_tmax=False)
 
-    def _add_log(self, log, participant_id):
+    def _add_log(self, log):
         """Add the behavioral log to the epochs as metadata."""
 
         if self.config.triggers_column is not None:
             log, self.missing_ixs = self._match_log_to_epochs(log)
 
         self.epochs.metadata = log
-
-        self.epochs.metadata.insert(0, column="participant_id", value=participant_id)
 
     def _match_log_to_epochs(self, log, depth=10):
         """Automatically match the behavioral log to the epochs in case of

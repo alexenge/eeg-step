@@ -8,6 +8,7 @@ from step.component import ComponentConfig, ComponentPipeline
 from step.datasets.ucap import get_ucap
 from step.epoch import EpochConfig, EpochPipeline
 from step.group import GroupPipeline
+from step.helpers import _get_participant_id
 from step.input import InputConfig, InputPipeline
 from step.participant import ParticipantConfig, ParticipantPipeline
 from step.preproc import PreprocConfig, PreprocPipeline
@@ -25,7 +26,9 @@ def sample_input_config(sample_data):
     """Creates an InputConfig for the sample data."""
 
     return InputConfig(
-        raw_file=sample_data["raw_files"][0], log_file=sample_data["log_files"][0]
+        participant_id=_get_participant_id(sample_data["raw_files"][0]),
+        raw_file=sample_data["raw_files"][0],
+        log_file=sample_data["log_files"][0],
     )
 
 
@@ -34,6 +37,7 @@ def sample_input_config_besa(sample_data):
     """Creates an InputConfig for the sample data incl. BESA file."""
 
     return InputConfig(
+        participant_id=_get_participant_id(sample_data["raw_files"][0]),
         raw_file=sample_data["raw_files"][0],
         log_file=sample_data["log_files"][0],
         besa_file=sample_data["besa_files"][0],
@@ -45,7 +49,10 @@ def sample_input_config_combine(sample_data):
     """Creates an InputConfig for the case when a participant has
     multiple EEG files that need to be combined."""
 
-    return InputConfig(raw_file=sample_data["raw_files"][0:2])
+    return InputConfig(
+        participant_id=_get_participant_id(sample_data["raw_files"][0:2]),
+        raw_file=sample_data["raw_files"][0:2],
+    )
 
 
 @pytest.fixture(scope="session")
@@ -356,6 +363,20 @@ def sample_group_pipeline(sample_data):
         log_files=log_files,
         besa_files=sample_data["besa_files"],
         downsample_sfreq=100,
+    )
+    group_pipeline.run()
+
+    return group_pipeline
+
+
+@pytest.fixture(scope="session")
+def sample_group_pipeline_bad_channels(sample_data):
+    group_pipeline = GroupPipeline(
+        raw_files=sample_data["raw_files"],
+        log_files=sample_data["log_files"],
+        besa_files=sample_data["besa_files"],
+        downsample_sfreq=100,
+        bad_channels={"09": ["Fp1", "PO8"], "12": []},
     )
     group_pipeline.run()
 

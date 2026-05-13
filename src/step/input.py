@@ -34,6 +34,8 @@ class InputPipeline:
         self._add_participant_id_to_raw()
 
         self._read_log()
+        if self.log is not None:
+            self._add_participant_id_to_log()
 
         self._read_besa()
 
@@ -48,6 +50,8 @@ class InputPipeline:
             self.raw = read_raw(self.config.raw_file, preload=True)
 
     def _add_participant_id_to_raw(self):
+        """Add the participant ID to the raw data's info dictionary."""
+
         if self.raw.info["subject_info"] is not None:
             self.raw.info["subject_info"].update({"his_id": self.config.participant_id})
         else:
@@ -76,6 +80,11 @@ class InputPipeline:
                 self.log = pd.read_csv(
                     self.config.log_file, delimiter="\t", encoding=encoding
                 )
+
+    def _add_participant_id_to_log(self):
+        """Add the participant ID to the log as a new column."""
+
+        self.log.insert(0, column="participant_id", value=self.config.participant_id)
 
     def _read_besa(self):
         """Read the BESA file containing the ocular correction matrix."""

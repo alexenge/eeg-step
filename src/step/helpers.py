@@ -16,17 +16,17 @@ def _process_files_input(files_input, file_extensions):
         return files
 
 
-def _dict_to_list(d, key_list, default=None):
+def _dict_to_list(input_dict, key_list, default=None):
     """Convert a dictionary to a list based on a list of keys."""
 
-    l = []
-    for key, value in d.items():
-        if key in key_list:
-            l.append(value)
+    output_list = []
+    for key in key_list:
+        if key in input_dict:
+            output_list.append(input_dict[key])
         else:
-            l.append(default)
+            output_list.append(default)
 
-    return l
+    return output_list
 
 
 def _get_participant_id(raw_file):
