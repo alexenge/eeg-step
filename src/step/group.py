@@ -117,9 +117,14 @@ class GroupPipeline:
         self.n_participants = len(self.participant_ids)
 
     def _process_bad_channels(self):
-        if self.bad_channels is list:
+
+        if isinstance(self.bad_channels, list):
             self.bad_channels_ = self.bad_channels
         elif self.bad_channels == "auto":
             self.bad_channels_ = ["auto"] * self.n_participants
-        elif self.bad_channels is dict:
+        elif isinstance(self.bad_channels, dict):
             self.bad_channels_ = _dict_to_list(self.bad_channels, self.participant_ids)
+        else:
+            raise ValueError(
+                "`bad_channels` must be a list of lists, a dictionary, or 'auto'"
+            )
