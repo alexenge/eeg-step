@@ -16,7 +16,7 @@ class EpochConfig:
     tmin: float = -0.2
     tmax: float = 0.8
     baseline: tuple[float, float] = (-0.2, 0.0)
-    reject = 200.0
+    reject: float = 200.0
 
 
 class EpochPipeline:

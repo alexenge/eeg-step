@@ -2,6 +2,9 @@ from os import PathLike
 
 import pandas as pd
 
+from .average import AverageConfig
+from .component import ComponentConfig
+from .epoch import EpochConfig
 from .helpers import _dict_to_list, _get_participant_id, _process_files_input
 from .input import InputConfig
 from .participant import ParticipantConfig, ParticipantPipeline
@@ -27,6 +30,14 @@ class GroupPipeline:
         ica_eog_channels: list[str] | str = "auto",
         highpass_freq: float = 0.1,
         lowpass_freq: float = 40.0,
+        triggers: list[int] = None,
+        triggers_column: str = None,
+        tmin: float = -0.2,
+        tmax: float = 0.8,
+        baseline: tuple[float, float] = (-0.2, 0.0),
+        reject: float = 200.0,
+        component_configs: list[ComponentConfig] = None,
+        average_configs: list[AverageConfig] = None,
     ):
         self.raw_files = raw_files
         self.log_files = log_files
@@ -42,6 +53,14 @@ class GroupPipeline:
         self.ica_eog_channels = ica_eog_channels
         self.highpass_freq = highpass_freq
         self.lowpass_freq = lowpass_freq
+        self.triggers = triggers
+        self.triggers_column = triggers_column
+        self.tmin = tmin
+        self.tmax = tmax
+        self.baseline = baseline
+        self.reject = reject
+        self.component_configs = component_configs
+        self.average_configs = average_configs
 
         self._process_raw_files()
         self._process_log_files()
@@ -85,7 +104,22 @@ class GroupPipeline:
                 lowpass_freq=lowpass_freq,
             )
 
-            participant_config = ParticipantConfig(input_config, preproc_config)
+            epoch_config = EpochConfig(
+                triggers=triggers,
+                triggers_column=triggers_column,
+                tmin=tmin,
+                tmax=tmax,
+                baseline=baseline,
+                reject=reject,
+            )
+
+            participant_config = ParticipantConfig(
+                input_config,
+                preproc_config,
+                epoch_config,
+                component_configs,
+                average_configs,
+            )
             participant_pipeline = ParticipantPipeline(participant_config)
             self.participant_pipelines[participant_id] = participant_pipeline
 
@@ -117,7 +151,6 @@ class GroupPipeline:
         self.n_participants = len(self.participant_ids)
 
     def _process_bad_channels(self):
-
         if isinstance(self.bad_channels, list):
             self.bad_channels_ = self.bad_channels
         elif self.bad_channels == "auto":

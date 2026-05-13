@@ -336,9 +336,9 @@ def sample_participant_config(
     return ParticipantConfig(
         input_config=sample_input_config,
         preproc_config=sample_preproc_config,
-        # epoch_config=sample_epoch_config,
-        # component_configs=sample_component_configs,
-        # average_configs=sample_average_configs,
+        epoch_config=sample_epoch_config,
+        component_configs=sample_component_configs,
+        average_configs=sample_average_configs,
     )
 
 
@@ -353,7 +353,9 @@ def sample_participant_pipeline(sample_participant_config):
 
 
 @pytest.fixture(scope="session")
-def sample_group_pipeline(sample_data):
+def sample_group_pipeline(
+    sample_data, sample_component_configs, sample_average_configs
+):
     # For the log files, we use the parent folder instead of the file list, so
     # that the functionality of locating relevant files from a folder also gets tested.
     log_files = Path(sample_data["log_files"][0]).parent
@@ -363,6 +365,26 @@ def sample_group_pipeline(sample_data):
         log_files=log_files,
         besa_files=sample_data["besa_files"],
         downsample_sfreq=100,
+        triggers=[
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207,
+            208,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+        ],
+        component_configs=sample_component_configs,
+        average_configs=sample_average_configs,
     )
     group_pipeline.run()
 
@@ -370,13 +392,35 @@ def sample_group_pipeline(sample_data):
 
 
 @pytest.fixture(scope="session")
-def sample_group_pipeline_bad_channels(sample_data):
+def sample_group_pipeline_bad_channels(
+    sample_data, sample_component_configs, sample_average_configs
+):
     group_pipeline = GroupPipeline(
         raw_files=sample_data["raw_files"],
         log_files=sample_data["log_files"],
         besa_files=sample_data["besa_files"],
         downsample_sfreq=100,
         bad_channels={"09": ["Fp1", "PO8"], "12": []},
+        triggers=[
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207,
+            208,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+        ],
+        component_configs=sample_component_configs,
+        average_configs=sample_average_configs,
     )
     group_pipeline.run()
 
