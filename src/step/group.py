@@ -2,10 +2,14 @@ from os import PathLike
 
 import pandas as pd
 
-from .average import AverageConfig
 from .component import ComponentConfig
 from .epoch import EpochConfig
-from .helpers import _dict_to_list, _get_participant_id, _process_files_input
+from .helpers import (
+    _dict_to_average_configs,
+    _dict_to_list,
+    _get_participant_id,
+    _process_files_input,
+)
 from .input import InputConfig
 from .participant import ParticipantConfig, ParticipantPipeline
 from .preproc import PreprocConfig
@@ -37,7 +41,7 @@ class GroupPipeline:
         baseline: tuple[float, float] = (-0.2, 0.0),
         reject: float = 200.0,
         component_configs: list[ComponentConfig] = None,
-        average_configs: list[AverageConfig] = None,
+        average_by: dict = None,
     ):
         self.raw_files = raw_files
         self.log_files = log_files
@@ -60,7 +64,7 @@ class GroupPipeline:
         self.baseline = baseline
         self.reject = reject
         self.component_configs = component_configs
-        self.average_configs = average_configs
+        self.average_by = average_by
 
         self._process_raw_files()
         self._process_log_files()
@@ -68,6 +72,16 @@ class GroupPipeline:
         self._get_participant_ids()
         self._get_n_participants()
         self._process_bad_channels()
+
+        epoch_config = EpochConfig(
+            triggers=triggers,
+            triggers_column=triggers_column,
+            tmin=tmin,
+            tmax=tmax,
+            baseline=baseline,
+            reject=reject,
+        )
+        average_configs = _dict_to_average_configs(average_by)
 
         self.participant_pipelines = dict()
         for (
@@ -104,15 +118,6 @@ class GroupPipeline:
                 lowpass_freq=lowpass_freq,
             )
 
-            epoch_config = EpochConfig(
-                triggers=triggers,
-                triggers_column=triggers_column,
-                tmin=tmin,
-                tmax=tmax,
-                baseline=baseline,
-                reject=reject,
-            )
-
             participant_config = ParticipantConfig(
                 input_config,
                 preproc_config,
@@ -120,6 +125,7 @@ class GroupPipeline:
                 component_configs,
                 average_configs,
             )
+
             participant_pipeline = ParticipantPipeline(participant_config)
             self.participant_pipelines[participant_id] = participant_pipeline
 
