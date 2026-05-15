@@ -425,7 +425,7 @@ def sample_group_pipeline(
         besa_files=sample_besa_files,
         downsample_sfreq=100,
         triggers=sample_triggers,
-        component_configs=sample_component_configs,
+        components=sample_component_configs,
         average_by={"blurr": "n_b == 'blurr'", "normal": "n_b == 'normal'"},
     )
     group_pipeline.run()
@@ -449,7 +449,7 @@ def sample_group_pipeline_bad_channels(
         downsample_sfreq=100,
         bad_channels={"09": ["Fp1", "PO8"], "12": []},
         triggers=sample_triggers,
-        component_configs=sample_component_configs,
+        components=sample_component_configs,
         average_by={"blurr": "n_b == 'blurr'", "normal": "n_b == 'normal'"},
     )
     group_pipeline.run()
