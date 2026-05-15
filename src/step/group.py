@@ -40,7 +40,7 @@ class GroupPipeline:
         tmax: float = 0.8,
         baseline: tuple[float, float] = (-0.2, 0.0),
         reject: float = 200.0,
-        component_configs: list[ComponentConfig] = None,
+        components: list[ComponentConfig] = None,
         average_by: dict = None,
     ):
         self.raw_files = raw_files
@@ -63,7 +63,7 @@ class GroupPipeline:
         self.tmax = tmax
         self.baseline = baseline
         self.reject = reject
-        self.component_configs = component_configs
+        self.components = components
         self.average_by = average_by
 
         self._process_raw_files()
@@ -73,6 +73,7 @@ class GroupPipeline:
         self._get_n_participants()
         self._process_bad_channels()
 
+        # Common configurations for all participants
         epoch_config = EpochConfig(
             triggers=triggers,
             triggers_column=triggers_column,
@@ -81,6 +82,7 @@ class GroupPipeline:
             baseline=baseline,
             reject=reject,
         )
+        component_configs = components
         average_configs = _dict_to_average_configs(average_by)
 
         self.participant_pipelines = dict()
