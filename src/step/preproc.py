@@ -19,7 +19,7 @@ class PreprocConfig:
     heog_channels: list[str] | str = "auto"
     veog_channels: list[str] | str = "auto"
     montage: str | PathLike = "easycap-M1"
-    bad_channels: list[str] | str = "auto"
+    bad_channels: list[str] | str = None
     ref_channels: list[str] | str = "average"
     ica_method: str = "fastica"
     ica_n_components: int | float = None
