@@ -355,8 +355,8 @@ def sample_average_pipeline_normal(
 
 @pytest.fixture(scope="session")
 def sample_participant_config(
-    sample_input_config,
-    sample_preproc_config,
+    sample_input_config_besa,
+    sample_preproc_config_besa,
     sample_epoch_config,
     sample_component_configs,
     sample_average_configs,
@@ -364,8 +364,8 @@ def sample_participant_config(
     """Creates a ParticipantConfig for the sample data."""
 
     return ParticipantConfig(
-        input_config=sample_input_config,
-        preproc_config=sample_preproc_config,
+        input_config=sample_input_config_besa,
+        preproc_config=sample_preproc_config_besa,
         epoch_config=sample_epoch_config,
         component_configs=sample_component_configs,
         average_configs=sample_average_configs,
