@@ -390,6 +390,13 @@ def sample_raw_files(sample_data):
 
 
 @pytest.fixture(scope="session")
+def sample_raw_files_folder(sample_data):
+    """Returns the folder containing the raw files for the sample data."""
+
+    return Path(sample_data["raw_files"][0]).parent
+
+
+@pytest.fixture(scope="session")
 def sample_log_files(sample_data):
     """Returns the log files for all participants in the sample data."""
 
@@ -411,22 +418,29 @@ def sample_besa_files(sample_data):
 
 
 @pytest.fixture(scope="session")
+def sample_average_by():
+    """Returns a dictionary specifying how to average the epochs for the sample
+    data."""
+
+    return {"blurr": "n_b == 'blurr'", "normal": "n_b == 'normal'"}
+
+
+@pytest.fixture(scope="session")
 def sample_group_pipeline(
-    sample_raw_files,
+    sample_raw_files_folder,
     sample_log_files_folder,
-    sample_besa_files,
     sample_triggers,
     sample_component_configs,
-    sample_average_configs,
+    sample_average_by,
 ):
     group_pipeline = GroupPipeline(
-        raw_files=sample_raw_files,
+        raw_files=sample_raw_files_folder,
         log_files=sample_log_files_folder,
-        besa_files=sample_besa_files,
         downsample_sfreq=100,
+        bad_channels={"09": ["Fp1", "PO8"], "12": []},
         triggers=sample_triggers,
         components=sample_component_configs,
-        average_by={"blurr": "n_b == 'blurr'", "normal": "n_b == 'normal'"},
+        average_by=sample_average_by,
     )
     group_pipeline.run()
 
@@ -434,23 +448,23 @@ def sample_group_pipeline(
 
 
 @pytest.fixture(scope="session")
-def sample_group_pipeline_bad_channels(
+def sample_group_pipeline_besa(
     sample_raw_files,
     sample_log_files,
     sample_besa_files,
     sample_triggers,
     sample_component_configs,
-    sample_average_configs,
+    sample_average_by,
 ):
     group_pipeline = GroupPipeline(
         raw_files=sample_raw_files,
         log_files=sample_log_files,
         besa_files=sample_besa_files,
         downsample_sfreq=100,
-        bad_channels={"09": ["Fp1", "PO8"], "12": []},
+        bad_channels="auto",
         triggers=sample_triggers,
         components=sample_component_configs,
-        average_by={"blurr": "n_b == 'blurr'", "normal": "n_b == 'normal'"},
+        average_by=sample_average_by,
     )
     group_pipeline.run()
 
