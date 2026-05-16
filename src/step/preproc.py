@@ -68,9 +68,8 @@ class PreprocPipeline:
 
         self._apply_montage()
 
-        if self.config.bad_channels is not None:
-            if self.config.bad_channels != "auto":
-                self._interpolate_bad_channels()
+        if self.config.bad_channels not in [None, "auto", []]:
+            self._interpolate_bad_channels()
 
         self._set_eeg_reference()
 
