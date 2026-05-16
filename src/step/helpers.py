@@ -5,17 +5,32 @@ from pandas.api.types import is_list_like
 from .average import AverageConfig
 
 
-def _process_files_input(files_input, file_extensions):
-    """Process the "files" input arguments of the pipeline from a list or folder
-    path."""
+def _process_files_input(files_input, file_extensions, n_out=None):
+    """Process the `..._files` input arguments of the pipeline."""
 
     if is_list_like(files_input):
         return files_input
-    else:
+
+    elif isinstance(files_input, (str, Path)):
         files = []
         for ext in file_extensions:
             files.extend(Path(files_input).glob(f"*.{ext}"))
-        return files
+        assert len(files) > 0, (
+            f"No files with extensions {file_extensions} found in folder {files_input}"
+        )
+        if n_out is not None:
+            assert len(files) == n_out, (
+                f"Number of files with extensions {file_extensions} in folder "
+                f"{files_input} ({len(files)}) does not match the number of "
+                f"participants ({n_out})"
+            )
+        return sorted(files)
+
+    else:
+        if n_out is not None:
+            return [files_input] * n_out
+        else:
+            ValueError("If `files_input` is a scalar, `n_out` must be specified")
 
 
 def _dict_to_list(input_dict, key_list, default=None):

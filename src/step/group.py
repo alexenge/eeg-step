@@ -67,10 +67,9 @@ class GroupPipeline:
         self.average_by = average_by
 
         self._process_raw_files()
+        self._get_participant_ids()
         self._process_log_files()
         self._process_besa_files()
-        self._get_participant_ids()
-        self._get_n_participants()
         self._process_bad_channels()
 
         # Common configurations for all participants
@@ -85,6 +84,7 @@ class GroupPipeline:
         component_configs = components
         average_configs = _dict_to_average_configs(average_by)
 
+        # Participant-specific configurations and pipelines
         self.participant_pipelines = dict()
         for (
             raw_file,
@@ -132,8 +132,6 @@ class GroupPipeline:
             self.participant_pipelines[participant_id] = participant_pipeline
 
     def run(self):
-        self._get_participant_ids()
-
         for participant_pipeline in self.participant_pipelines.values():
             participant_pipeline.run()
 
@@ -142,12 +140,16 @@ class GroupPipeline:
 
     def _process_log_files(self):
         self.log_files_ = _process_files_input(
-            self.log_files, file_extensions=["csv", "tsv", "txt"]
+            self.log_files,
+            file_extensions=["csv", "tsv", "txt"],
+            n_out=len(self.participant_ids),
         )
 
     def _process_besa_files(self):
         self.besa_files_ = _process_files_input(
-            self.besa_files, file_extensions=["matrix"]
+            self.besa_files,
+            file_extensions=["matrix"],
+            n_out=len(self.participant_ids),
         )
 
     def _get_participant_ids(self):
@@ -155,14 +157,11 @@ class GroupPipeline:
             _get_participant_id(raw_file) for raw_file in self.raw_files_
         ]
 
-    def _get_n_participants(self):
-        self.n_participants = len(self.participant_ids)
-
     def _process_bad_channels(self):
         if isinstance(self.bad_channels, list):
             self.bad_channels_ = self.bad_channels
         elif self.bad_channels == "auto":
-            self.bad_channels_ = ["auto"] * self.n_participants
+            self.bad_channels_ = ["auto"] * len(self.participant_ids)
         elif isinstance(self.bad_channels, dict):
             self.bad_channels_ = _dict_to_list(self.bad_channels, self.participant_ids)
         else:
