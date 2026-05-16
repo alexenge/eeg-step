@@ -43,6 +43,16 @@ class PreprocPipeline:
         assert isinstance(raw, BaseRaw), (
             "`raw` must be an instance of the `mne.io.BaseRaw` class"
         )
+
+        if besa is not None and self.config.ica_method is not None:
+            warn(
+                "Disabling ICA correction since BESA/MSEC correction is enabled. "
+                "You can disable this warning by setting `ica_method=None`."
+            )
+            self.ica_method = None
+        else:
+            self.ica_method = self.config.ica_method
+
         self.raw = raw.copy()
 
         if self.config.downsample_sfreq is not None:
@@ -69,7 +79,7 @@ class PreprocPipeline:
             self.besa = besa
             self._correct_besa()
 
-        if self.config.ica_method is not None:
+        if self.ica_method is not None:
             if self.config.ica_eog_channels == "auto":
                 self.ica_eog_channels = ["HEOG", "VEOG"]
             else:
