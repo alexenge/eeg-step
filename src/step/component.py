@@ -51,7 +51,7 @@ class ComponentPipeline:
         epochs_roi = combine_channels(self.epochs, roi_dict)
 
         self.epochs.add_channels([epochs_roi], force_update_info=True)
-        self.epochs.set_channel_types({self.config.name: "misc"})
+        self.epochs.set_channel_types({self.config.name: "misc"}, verbose="ERROR")
 
     def _get_data(self):
         """Extract the time series data for the time window and region of interest."""
