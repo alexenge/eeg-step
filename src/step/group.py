@@ -10,7 +10,7 @@ from .helpers import (
     _get_participant_id,
     _process_files_input,
 )
-from .input import InputConfig
+from .input import InputPipeline
 from .participant import ParticipantConfig, ParticipantPipeline
 from .preproc import PreprocConfig
 
@@ -99,7 +99,7 @@ class GroupPipeline:
             self.participant_ids,
             self.bad_channels_,
         ):
-            input_config = InputConfig(
+            input_pipeline = InputPipeline(
                 raw_file=raw_file,
                 log_file=log_file,
                 besa_file=besa_file,
@@ -121,14 +121,15 @@ class GroupPipeline:
             )
 
             participant_config = ParticipantConfig(
-                input_config,
                 preproc_config,
                 epoch_config,
                 component_configs,
                 average_configs,
             )
 
-            participant_pipeline = ParticipantPipeline(participant_config)
+            participant_pipeline = ParticipantPipeline(
+                participant_config, input_pipeline
+            )
             self.participant_pipelines[participant_id] = participant_pipeline
 
     def run(self):

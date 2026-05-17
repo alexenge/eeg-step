@@ -9,7 +9,7 @@ from step.datasets.ucap import get_ucap
 from step.epoch import EpochConfig, EpochPipeline
 from step.group import GroupPipeline
 from step.helpers import _get_participant_id
-from step.input import InputConfig, InputPipeline
+from step.input import InputPipeline
 from step.participant import ParticipantConfig, ParticipantPipeline
 from step.preproc import PreprocConfig, PreprocPipeline
 
@@ -50,31 +50,6 @@ def sample_besa_file(sample_data):
 
 
 @pytest.fixture(scope="session")
-def sample_input_config(sample_raw_file, sample_log_file, sample_participant_id):
-    """Creates an InputConfig for the sample data."""
-
-    return InputConfig(
-        participant_id=sample_participant_id,
-        raw_file=sample_raw_file,
-        log_file=sample_log_file,
-    )
-
-
-@pytest.fixture(scope="session")
-def sample_input_config_besa(
-    sample_raw_file, sample_log_file, sample_besa_file, sample_participant_id
-):
-    """Creates an InputConfig for the sample data incl. BESA file."""
-
-    return InputConfig(
-        participant_id=sample_participant_id,
-        raw_file=sample_raw_file,
-        log_file=sample_log_file,
-        besa_file=sample_besa_file,
-    )
-
-
-@pytest.fixture(scope="session")
 def sample_raw_file_combine(sample_data):
     """Returns the raw files for the first two participants in the sample data."""
 
@@ -90,42 +65,46 @@ def sample_participant_id_combine(sample_raw_file_combine):
 
 
 @pytest.fixture(scope="session")
-def sample_input_config_combine(sample_raw_file_combine, sample_participant_id_combine):
-    """Creates an InputConfig for the case when a participant has
-    multiple EEG files that need to be combined."""
-
-    return InputConfig(
-        participant_id=sample_participant_id_combine,
-        raw_file=sample_raw_file_combine,
-    )
-
-
-@pytest.fixture(scope="session")
-def sample_input_pipeline(sample_input_config):
+def sample_input_pipeline(sample_participant_id, sample_raw_file, sample_log_file):
     """Creates and runs an InputPipeline for the sample data."""
 
-    input_pipeline = InputPipeline(sample_input_config)
+    input_pipeline = InputPipeline(
+        participant_id=sample_participant_id,
+        raw_file=sample_raw_file,
+        log_file=sample_log_file,
+    )
     input_pipeline.run()
 
     return input_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_input_pipeline_besa(sample_input_config_besa):
+def sample_input_pipeline_besa(
+    sample_participant_id, sample_raw_file, sample_log_file, sample_besa_file
+):
     """Creates and runs an InputPipeline for the sample data using BESA."""
 
-    input_pipeline = InputPipeline(sample_input_config_besa)
+    input_pipeline = InputPipeline(
+        participant_id=sample_participant_id,
+        raw_file=sample_raw_file,
+        log_file=sample_log_file,
+        besa_file=sample_besa_file,
+    )
     input_pipeline.run()
 
     return input_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_input_pipeline_combine(sample_input_config_combine):
+def sample_input_pipeline_combine(
+    sample_participant_id_combine, sample_raw_file_combine
+):
     """Creates and runs an InputPipeline for the case when a participant has
     multiple EEG files that need to be combined."""
 
-    input_pipeline = InputPipeline(sample_input_config_combine)
+    input_pipeline = InputPipeline(
+        participant_id=sample_participant_id_combine, raw_file=sample_raw_file_combine
+    )
     input_pipeline.run()
 
     return input_pipeline
@@ -355,7 +334,6 @@ def sample_average_pipeline_normal(
 
 @pytest.fixture(scope="session")
 def sample_participant_config(
-    sample_input_config_besa,
     sample_preproc_config_besa,
     sample_epoch_config,
     sample_component_configs,
@@ -364,7 +342,6 @@ def sample_participant_config(
     """Creates a ParticipantConfig for the sample data."""
 
     return ParticipantConfig(
-        input_config=sample_input_config_besa,
         preproc_config=sample_preproc_config_besa,
         epoch_config=sample_epoch_config,
         component_configs=sample_component_configs,
@@ -373,10 +350,12 @@ def sample_participant_config(
 
 
 @pytest.fixture(scope="session")
-def sample_participant_pipeline(sample_participant_config):
+def sample_participant_pipeline(sample_participant_config, sample_input_pipeline_besa):
     """Creates and runs a ParticipantPipeline for the sample data."""
 
-    participant_pipeline = ParticipantPipeline(sample_participant_config)
+    participant_pipeline = ParticipantPipeline(
+        sample_participant_config, sample_input_pipeline_besa
+    )
     participant_pipeline.run()
 
     return participant_pipeline
