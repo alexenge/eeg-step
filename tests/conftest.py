@@ -462,6 +462,7 @@ def sample_group_pipeline_besa(
         besa_files=sample_besa_files,
         downsample_sfreq=100,
         bad_channels="auto",
+        ica_method=None,
         triggers=sample_triggers,
         components=sample_component_configs,
         average_by=sample_average_by,
