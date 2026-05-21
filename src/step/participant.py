@@ -4,14 +4,13 @@ from .average import AverageConfig, AveragePipeline
 from .component import ComponentConfig, ComponentPipeline
 from .epoch import EpochConfig, EpochPipeline
 from .input import InputPipeline
-from .preproc import PreprocConfig, PreprocPipeline
+from .preproc import PreprocPipeline
 
 
 @dataclass
 class ParticipantConfig:
     """The configuration for the participant pipeline."""
 
-    preproc_config: PreprocConfig = None
     epoch_config: EpochConfig = None
     component_configs: list[ComponentConfig] = None
     average_configs: list[AverageConfig] = None
@@ -21,9 +20,14 @@ class ParticipantPipeline:
     """The participant pipeline for processing the EEG data of a single
     participant."""
 
-    def __init__(self, config: ParticipantConfig, input_pipeline: InputPipeline):
+    def __init__(
+        self,
+        config: ParticipantConfig,
+        input_pipeline: InputPipeline,
+        preproc_pipeline: PreprocPipeline,
+    ):
         self.input_pipeline = input_pipeline
-        self.preproc_pipeline = PreprocPipeline(config.preproc_config)
+        self.preproc_pipeline = preproc_pipeline
         self.epoch_pipeline = EpochPipeline(config.epoch_config)
         self.component_pipelines = [
             ComponentPipeline(cfg) for cfg in config.component_configs
@@ -42,7 +46,7 @@ class ParticipantPipeline:
         # TODO: Maybe this could be done on the continuous raw data (i.e.,
         # fully within the preproc pipeline) rather then on the epochs.
         # Let's check once we added automatic break detection (#212).
-        if self.preproc_pipeline.config.bad_channels == "auto":
+        if self.preproc_pipeline.bad_channels == "auto":
             self._detect_bad_channels_and_rerun()
 
         for component_pipeline in self.component_pipelines:
@@ -60,6 +64,6 @@ class ParticipantPipeline:
         bad_channels = self.epoch_pipeline.detect_bad_channels()
 
         if len(bad_channels) > 0:
-            self.preproc_pipeline.config.bad_channels = bad_channels
+            self.preproc_pipeline.bad_channels = bad_channels
             self.preproc_pipeline.run(self.input_pipeline.raw, self.input_pipeline.besa)
             self.epoch_pipeline.run(self.preproc_pipeline.raw, self.input_pipeline.log)

@@ -11,7 +11,7 @@ from step.group import GroupPipeline
 from step.helpers import _get_participant_id
 from step.input import InputPipeline
 from step.participant import ParticipantConfig, ParticipantPipeline
-from step.preproc import PreprocConfig, PreprocPipeline
+from step.preproc import PreprocPipeline
 
 
 @pytest.fixture(scope="session")
@@ -111,48 +111,48 @@ def sample_input_pipeline_combine(
 
 
 @pytest.fixture(scope="session")
-def sample_preproc_config():
-    """Creates a PreprocConfig for the sample data using ICA and
-    automatic bad channel detection."""
+def sample_raw(sample_input_pipeline):
+    """Returns the raw data for the sample data."""
 
-    return PreprocConfig(downsample_sfreq=100, bad_channels="auto")
-
-
-@pytest.fixture(scope="session")
-def sample_preproc_config_besa():
-    """Creates a PreprocConfig for the sample data using BESA
-    and manual bad channel selection."""
-
-    return PreprocConfig(
-        downsample_sfreq=100, bad_channels=["Fp1", "PO8"], ica_method=None
-    )
+    return sample_input_pipeline.raw
 
 
 @pytest.fixture(scope="session")
-def sample_preproc_pipeline(sample_preproc_config, sample_input_pipeline):
+def sample_preproc_pipeline(sample_raw):
     """Creates and runs a PreprocPipeline for the sample data using
     ICA."""
 
-    preproc_pipeline = PreprocPipeline(sample_preproc_config)
-    raw = sample_input_pipeline.raw
-    preproc_pipeline.run(raw)
+    preproc_pipeline = PreprocPipeline(downsample_sfreq=100, bad_channels="auto")
+    preproc_pipeline.run(sample_raw)
 
     return preproc_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_preproc_pipeline_besa(
-    sample_preproc_config_besa, sample_input_pipeline_besa
-):
+def sample_raw_besa(sample_input_pipeline_besa):
+    """Returns the raw data for the sample data using BESA."""
+
+    return sample_input_pipeline_besa.raw
+
+
+@pytest.fixture(scope="session")
+def sample_besa(sample_input_pipeline_besa):
+    """Returns the BESA data for the sample data."""
+
+    return sample_input_pipeline_besa.besa
+
+
+@pytest.fixture(scope="session")
+def sample_preproc_pipeline_besa(sample_raw_besa, sample_besa):
     """Creates and runs a PreprocPipeline for the sample data using BESA
     and manual bad channel selection."""
 
-    preproc_pipeline = PreprocPipeline(sample_preproc_config_besa)
-    raw = sample_input_pipeline_besa.raw
-    besa = sample_input_pipeline_besa.besa
-    preproc_pipeline.run(raw, besa)
+    preproc_pipeline_besa = PreprocPipeline(
+        downsample_sfreq=100, bad_channels=["Fp1", "PO8"], ica_method=None
+    )
+    preproc_pipeline_besa.run(sample_raw_besa, sample_besa)
 
-    return preproc_pipeline
+    return preproc_pipeline_besa
 
 
 @pytest.fixture(scope="session")
@@ -416,7 +416,6 @@ def sample_group_pipeline(
         raw_files=sample_raw_files_folder,
         log_files=sample_log_files_folder,
         downsample_sfreq=100,
-        bad_channels={"09": ["Fp1", "PO8"], "12": []},
         triggers=sample_triggers,
         components=sample_component_configs,
         average_by=sample_average_by,
@@ -440,7 +439,6 @@ def sample_group_pipeline_besa(
         log_files=sample_log_files,
         besa_files=sample_besa_files,
         downsample_sfreq=100,
-        bad_channels="auto",
         ica_method=None,
         triggers=sample_triggers,
         components=sample_component_configs,

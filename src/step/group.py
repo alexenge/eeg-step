@@ -12,7 +12,7 @@ from .helpers import (
 )
 from .input import InputPipeline
 from .participant import ParticipantConfig, ParticipantPipeline
-from .preproc import PreprocConfig
+from .preproc import PreprocPipeline
 
 
 class GroupPipeline:
@@ -27,7 +27,7 @@ class GroupPipeline:
         heog_channels: list[str] | str = "auto",
         veog_channels: list[str] | str = "auto",
         montage: str | PathLike = "easycap-M1",
-        bad_channels: dict[list[str]] | str = "auto",
+        bad_channels: dict[list[str]] | str = None,
         ref_channels: list[str] | str = "average",
         ica_method: str = "fastica",
         ica_n_components: int | float = None,
@@ -106,7 +106,7 @@ class GroupPipeline:
                 participant_id=participant_id,
             )
 
-            preproc_config = PreprocConfig(
+            preproc_pipeline = PreprocPipeline(
                 downsample_sfreq=downsample_sfreq,
                 heog_channels=heog_channels,
                 veog_channels=veog_channels,
@@ -121,14 +121,13 @@ class GroupPipeline:
             )
 
             participant_config = ParticipantConfig(
-                preproc_config,
                 epoch_config,
                 component_configs,
                 average_configs,
             )
 
             participant_pipeline = ParticipantPipeline(
-                participant_config, input_pipeline
+                participant_config, input_pipeline, preproc_pipeline
             )
             self.participant_pipelines[participant_id] = participant_pipeline
 
