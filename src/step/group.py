@@ -3,7 +3,7 @@ from os import PathLike
 import pandas as pd
 
 from .component import ComponentConfig
-from .epoch import EpochConfig
+from .epoch import EpochPipeline
 from .helpers import (
     _dict_to_average_configs,
     _dict_to_list,
@@ -72,8 +72,8 @@ class GroupPipeline:
         self._process_besa_files()
         self._process_bad_channels()
 
-        # Common configurations for all participants
-        epoch_config = EpochConfig(
+        # Common pipelines for all participants
+        epoch_pipeline = EpochPipeline(
             triggers=triggers,
             triggers_column=triggers_column,
             tmin=tmin,
@@ -84,7 +84,7 @@ class GroupPipeline:
         component_configs = components
         average_configs = _dict_to_average_configs(average_by)
 
-        # Participant-specific configurations and pipelines
+        # Participant-specific pipelines
         self.participant_pipelines = dict()
         for (
             raw_file,
@@ -121,13 +121,12 @@ class GroupPipeline:
             )
 
             participant_config = ParticipantConfig(
-                epoch_config,
                 component_configs,
                 average_configs,
             )
 
             participant_pipeline = ParticipantPipeline(
-                participant_config, input_pipeline, preproc_pipeline
+                participant_config, input_pipeline, preproc_pipeline, epoch_pipeline
             )
             self.participant_pipelines[participant_id] = participant_pipeline
 
@@ -160,8 +159,8 @@ class GroupPipeline:
     def _process_bad_channels(self):
         if isinstance(self.bad_channels, list):
             self.bad_channels_ = self.bad_channels
-        elif self.bad_channels == "auto":
-            self.bad_channels_ = ["auto"] * len(self.participant_ids)
+        elif self.bad_channels is None or self.bad_channels == "auto":
+            self.bad_channels_ = [self.bad_channels] * len(self.participant_ids)
         elif isinstance(self.bad_channels, dict):
             self.bad_channels_ = _dict_to_list(self.bad_channels, self.participant_ids)
         else:

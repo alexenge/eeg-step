@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 import numpy as np
 from mne import Epochs, combine_evoked, events_from_annotations
 from mne.io import BaseRaw
@@ -7,27 +5,24 @@ from mne.io.brainvision.brainvision import RawBrainVision
 from scipy.stats import zscore
 
 
-@dataclass
-class EpochConfig:
-    """The configuration for the epoch pipeline."""
-
-    triggers: list[int] = None
-    triggers_column: str = None
-    tmin: float = -0.2
-    tmax: float = 0.8
-    baseline: tuple[float, float] = (-0.2, 0.0)
-    reject: float = 200.0
-
-
 class EpochPipeline:
     """The epoch pipeline for segmenting the continuous EEG data into epochs."""
 
-    def __init__(self, config):
-        assert isinstance(config, EpochConfig), (
-            "`config` must be an instance of the `EpochConfig` class"
-        )
-
-        self.config = config
+    def __init__(
+        self,
+        triggers: list[int] = None,
+        triggers_column: str = None,
+        tmin: float = -0.2,
+        tmax: float = 0.8,
+        baseline: tuple[float, float] = (-0.2, 0.0),
+        reject: float = 200.0,
+    ):
+        self.triggers = triggers
+        self.triggers_column = triggers_column
+        self.tmin = tmin
+        self.tmax = tmax
+        self.baseline = baseline
+        self.reject = reject
 
     def run(self, raw, log=None):
         """Run the epoch pipeline."""
@@ -43,7 +38,7 @@ class EpochPipeline:
         if log is not None:
             self._add_log(log)
 
-        if self.config.reject is not None:
+        if self.reject is not None:
             self._get_bad_ixs()
 
     def _get_events(self, raw):
@@ -51,16 +46,16 @@ class EpochPipeline:
 
         self.events, self.event_id = events_from_annotations(raw, verbose=False)
 
-        if self.config.triggers is not None:
+        if self.triggers is not None:
             if isinstance(raw, RawBrainVision):
                 self.event_id = {
-                    str(trigger): int(trigger) for trigger in self.config.triggers
+                    str(trigger): int(trigger) for trigger in self.triggers
                 }
             else:
                 self.event_id = {
                     key: value
                     for key, value in self.event_id.items()
-                    if int(key) in self.config.triggers
+                    if int(key) in self.triggers
                 }
 
     def _create_epochs(self, raw):
@@ -70,19 +65,19 @@ class EpochPipeline:
             raw,
             self.events,
             self.event_id,
-            tmin=self.config.tmin,
-            tmax=self.config.tmax,
-            baseline=self.config.baseline,
+            tmin=self.tmin,
+            tmax=self.tmax,
+            baseline=self.baseline,
             preload=True,
         )
 
         # Drop the last sample to produce a nice even number
-        self.epochs.crop(tmin=None, tmax=self.config.tmax, include_tmax=False)
+        self.epochs.crop(tmin=None, tmax=self.tmax, include_tmax=False)
 
     def _add_log(self, log):
         """Add the behavioral log to the epochs as metadata."""
 
-        if self.config.triggers_column is not None:
+        if self.triggers_column is not None:
             log, self.missing_ixs = self._match_log_to_epochs(log)
 
         self.epochs.metadata = log
@@ -91,11 +86,11 @@ class EpochPipeline:
         """Automatically match the behavioral log to the epochs in case of
         missing EEG trials."""
 
-        assert self.config.triggers_column in log.columns, (
-            f"Column '{self.config.triggers_column}' is not in the log file"
+        assert self.triggers_column in log.columns, (
+            f"Column '{self.triggers_column}' is not in the log file"
         )
 
-        events_log = log[self.config.triggers_column].tolist()
+        events_log = log[self.triggers_column].tolist()
 
         event_id_keys = list(self.epochs.event_id.keys())
         event_id_values = list(self.epochs.event_id.values())
@@ -135,11 +130,10 @@ class EpochPipeline:
     def _get_bad_ixs(self):
         """Get the indices of "bad" epochs based on peak-to-peak amplitude rejection."""
 
-        reject_dict = {"eeg": self.config.reject * 1e-6}
-        drop_log = self.epochs.copy().drop_bad(reject_dict).drop_log
-        drop_log_clean = [elem for elem in drop_log if "IGNORED" not in elem]
-        self.drop_log_clean = drop_log_clean
-        self.bad_ixs = [ix for ix, elem in enumerate(drop_log_clean) if elem != ()]
+        self.reject_dict = {"eeg": self.reject * 1e-6}
+        drop_log = self.epochs.copy().drop_bad(self.reject_dict).drop_log
+        self.drop_log_clean = [elem for elem in drop_log if "IGNORED" not in elem]
+        self.bad_ixs = [ix for ix, elem in enumerate(self.drop_log_clean) if elem != ()]
 
     def detect_bad_channels(self, threshold=3.0):
         """Automatically detect "bad" channels based on their standard

@@ -6,7 +6,7 @@ import pytest
 from step.average import AverageConfig, AveragePipeline
 from step.component import ComponentConfig, ComponentPipeline
 from step.datasets.ucap import get_ucap
-from step.epoch import EpochConfig, EpochPipeline
+from step.epoch import EpochPipeline
 from step.group import GroupPipeline
 from step.helpers import _get_participant_id
 from step.input import InputPipeline
@@ -180,52 +180,53 @@ def sample_triggers():
 
 
 @pytest.fixture(scope="session")
-def sample_epoch_config(sample_triggers):
-    """Creates an EpochConfig for the sample data."""
+def sample_raw_preproc(sample_preproc_pipeline):
+    """Returns the preprocessed raw data for the sample data."""
 
-    return EpochConfig(triggers=sample_triggers)
-
-
-@pytest.fixture(scope="session")
-def sample_epoch_config_match(sample_triggers):
-    """Creates an EpochConfig for the sample data."""
-
-    return EpochConfig(triggers=sample_triggers, triggers_column="bot")
+    return sample_preproc_pipeline.raw
 
 
 @pytest.fixture(scope="session")
-def sample_epoch_pipeline(
-    sample_epoch_config, sample_input_pipeline, sample_preproc_pipeline
-):
+def sample_log(sample_input_pipeline):
+    """Returns the log data for the sample data."""
+
+    return sample_input_pipeline.log
+
+
+@pytest.fixture(scope="session")
+def sample_epoch_pipeline(sample_triggers, sample_raw_preproc, sample_log):
     """Creates and runs an EpochPipeline for the sample data."""
 
-    epoch_pipeline = EpochPipeline(sample_epoch_config)
-    raw = sample_preproc_pipeline.raw
-    log = sample_input_pipeline.log
-    epoch_pipeline.run(raw, log)
+    epoch_pipeline = EpochPipeline(triggers=sample_triggers)
+    epoch_pipeline.run(sample_raw_preproc, sample_log)
 
     return epoch_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_epoch_pipeline_match(
-    sample_epoch_config_match, sample_input_pipeline, sample_preproc_pipeline
-):
-    """Creates and runs an EpochPipeline for the sample data."""
+def sample_raw_match(sample_raw_preproc):
+    """Returns a copy of the raw data for the sample data with some trials/triggers
+    artificially removed to test automatic matching of the log file."""
 
-    epoch_pipeline = EpochPipeline(sample_epoch_config_match)
-    # Let's pretend some trials/triggers are missing from the EEG recording
-    raw_to_match = sample_preproc_pipeline.raw.copy()
+    raw_match = sample_raw_preproc.copy()
     ixs = np.concatenate(
         [
             np.arange(0, 1001),
             np.arange(5000, 6001),
-            np.arange(10000, len(raw_to_match.annotations)),
+            np.arange(10000, len(raw_match.annotations)),
         ]
     )
-    raw_to_match.annotations.delete(ixs)
-    log = sample_input_pipeline.log
-    epoch_pipeline.run(raw_to_match, log)
+    raw_match.annotations.delete(ixs)
+
+    return raw_match
+
+
+@pytest.fixture(scope="session")
+def sample_epoch_pipeline_match(sample_triggers, sample_raw_match, sample_log):
+    """Creates and runs an EpochPipeline for the sample data."""
+
+    epoch_pipeline = EpochPipeline(triggers=sample_triggers, triggers_column="bot")
+    epoch_pipeline.run(sample_raw_match, sample_log)
 
     return epoch_pipeline
 
@@ -334,27 +335,31 @@ def sample_average_pipeline_normal(
 
 @pytest.fixture(scope="session")
 def sample_participant_config(
-    sample_preproc_config_besa,
-    sample_epoch_config,
     sample_component_configs,
     sample_average_configs,
 ):
     """Creates a ParticipantConfig for the sample data."""
 
     return ParticipantConfig(
-        preproc_config=sample_preproc_config_besa,
-        epoch_config=sample_epoch_config,
         component_configs=sample_component_configs,
         average_configs=sample_average_configs,
     )
 
 
 @pytest.fixture(scope="session")
-def sample_participant_pipeline(sample_participant_config, sample_input_pipeline_besa):
+def sample_participant_pipeline(
+    sample_participant_config,
+    sample_input_pipeline_besa,
+    sample_preproc_pipeline_besa,
+    sample_epoch_pipeline,
+):
     """Creates and runs a ParticipantPipeline for the sample data."""
 
     participant_pipeline = ParticipantPipeline(
-        sample_participant_config, sample_input_pipeline_besa
+        sample_participant_config,
+        sample_input_pipeline_besa,
+        sample_preproc_pipeline_besa,
+        sample_epoch_pipeline,
     )
     participant_pipeline.run()
 
@@ -439,6 +444,7 @@ def sample_group_pipeline_besa(
         log_files=sample_log_files,
         besa_files=sample_besa_files,
         downsample_sfreq=100,
+        bad_channels={"09": ["Fp1", "PO8"]},
         ica_method=None,
         triggers=sample_triggers,
         components=sample_component_configs,

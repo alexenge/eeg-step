@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from .average import AverageConfig, AveragePipeline
 from .component import ComponentConfig, ComponentPipeline
-from .epoch import EpochConfig, EpochPipeline
+from .epoch import EpochPipeline
 from .input import InputPipeline
 from .preproc import PreprocPipeline
 
@@ -11,7 +11,6 @@ from .preproc import PreprocPipeline
 class ParticipantConfig:
     """The configuration for the participant pipeline."""
 
-    epoch_config: EpochConfig = None
     component_configs: list[ComponentConfig] = None
     average_configs: list[AverageConfig] = None
 
@@ -25,10 +24,11 @@ class ParticipantPipeline:
         config: ParticipantConfig,
         input_pipeline: InputPipeline,
         preproc_pipeline: PreprocPipeline,
+        epoch_pipeline: EpochPipeline,
     ):
         self.input_pipeline = input_pipeline
         self.preproc_pipeline = preproc_pipeline
-        self.epoch_pipeline = EpochPipeline(config.epoch_config)
+        self.epoch_pipeline = epoch_pipeline
         self.component_pipelines = [
             ComponentPipeline(cfg) for cfg in config.component_configs
         ]
