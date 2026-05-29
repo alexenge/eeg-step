@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from .average import AverageConfig, AveragePipeline
-from .component import ComponentConfig, ComponentPipeline
+from .component import ComponentsPipeline
 from .epoch import EpochPipeline
 from .input import InputPipeline
 from .preproc import PreprocPipeline
@@ -11,7 +11,6 @@ from .preproc import PreprocPipeline
 class ParticipantConfig:
     """The configuration for the participant pipeline."""
 
-    component_configs: list[ComponentConfig] = None
     average_configs: list[AverageConfig] = None
 
 
@@ -25,13 +24,12 @@ class ParticipantPipeline:
         input_pipeline: InputPipeline,
         preproc_pipeline: PreprocPipeline,
         epoch_pipeline: EpochPipeline,
+        components_pipeline: ComponentsPipeline,
     ):
         self.input_pipeline = input_pipeline
         self.preproc_pipeline = preproc_pipeline
         self.epoch_pipeline = epoch_pipeline
-        self.component_pipelines = [
-            ComponentPipeline(cfg) for cfg in config.component_configs
-        ]
+        self.components_pipeline = components_pipeline
         self.average_pipelines = [
             AveragePipeline(cfg) for cfg in config.average_configs
         ]
@@ -49,10 +47,9 @@ class ParticipantPipeline:
         if self.preproc_pipeline.bad_channels == "auto":
             self._detect_bad_channels_and_rerun()
 
-        for component_pipeline in self.component_pipelines:
-            component_pipeline.run(
-                self.epoch_pipeline.epochs, self.epoch_pipeline.bad_ixs
-            )
+        self.components_pipeline.run(
+            self.epoch_pipeline.epochs, self.epoch_pipeline.bad_ixs
+        )
 
         for average_pipeline in self.average_pipelines:
             average_pipeline.run(

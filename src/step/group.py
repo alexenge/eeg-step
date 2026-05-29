@@ -2,7 +2,7 @@ from os import PathLike
 
 import pandas as pd
 
-from .component import ComponentConfig
+from .component import Component, ComponentsPipeline
 from .epoch import EpochPipeline
 from .helpers import (
     _dict_to_average_configs,
@@ -40,7 +40,8 @@ class GroupPipeline:
         tmax: float = 0.8,
         baseline: tuple[float, float] = (-0.2, 0.0),
         reject: float = 200.0,
-        components: list[ComponentConfig] = None,
+        components: list[Component] | Component = None,
+        compute_se: bool = False,
         average_by: dict = None,
     ):
         self.raw_files = raw_files
@@ -72,19 +73,8 @@ class GroupPipeline:
         self._process_besa_files()
         self._process_bad_channels()
 
-        # Common pipelines for all participants
-        epoch_pipeline = EpochPipeline(
-            triggers=triggers,
-            triggers_column=triggers_column,
-            tmin=tmin,
-            tmax=tmax,
-            baseline=baseline,
-            reject=reject,
-        )
-        component_configs = components
         average_configs = _dict_to_average_configs(average_by)
 
-        # Participant-specific pipelines
         self.participant_pipelines = dict()
         for (
             raw_file,
@@ -120,13 +110,25 @@ class GroupPipeline:
                 lowpass_freq=lowpass_freq,
             )
 
-            participant_config = ParticipantConfig(
-                component_configs,
-                average_configs,
+            epoch_pipeline = EpochPipeline(
+                triggers=triggers,
+                triggers_column=triggers_column,
+                tmin=tmin,
+                tmax=tmax,
+                baseline=baseline,
+                reject=reject,
             )
 
+            components_pipeline = ComponentsPipeline(components, compute_se)
+
+            participant_config = ParticipantConfig(average_configs)
+
             participant_pipeline = ParticipantPipeline(
-                participant_config, input_pipeline, preproc_pipeline, epoch_pipeline
+                participant_config,
+                input_pipeline,
+                preproc_pipeline,
+                epoch_pipeline,
+                components_pipeline,
             )
             self.participant_pipelines[participant_id] = participant_pipeline
 
