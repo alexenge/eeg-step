@@ -1,20 +1,22 @@
 from dataclasses import dataclass
 from warnings import warn
 
+from pandas.api.types import is_list_like
+
 
 @dataclass
-class AverageConfig:
-    """The configuration for the averaging pipeline."""
+class Average:
+    """The definition of a single by-participant average."""
 
     name: str
     query: str
 
 
 class AveragePipeline:
-    """The averaging pipeline for computing by-participant average amplitudes."""
+    """The pipeline for computing a single by-participant average."""
 
-    def __init__(self, config: AverageConfig):
-        self.config = config
+    def __init__(self, average: Average):
+        self.average = average
 
     def run(self, epochs, bad_ixs):
         """Run the averaging pipeline."""
@@ -37,7 +39,24 @@ class AveragePipeline:
     def _compute_average(self):
         """Compute the average amplitude for the specified query."""
 
-        self.evoked = self.epochs[self.good_ixs][self.config.query].average(
+        self.evoked = self.epochs[self.good_ixs][self.average.query].average(
             picks=["eeg", "misc"]
         )
-        self.evoked.comment = self.config.name
+        self.evoked.comment = self.average.name
+
+
+class AveragesPipeline:
+    """The pipeline for computing multiple by-participant averages."""
+
+    def __init__(self, averages: list[Average] | Average):
+        self.averages = averages
+
+        self.averages_ = averages if is_list_like(averages) else [averages]
+
+        self.average_pipelines = {}
+        for average in self.averages_:
+            self.average_pipelines[average.name] = AveragePipeline(average)
+
+    def run(self, epochs, bad_ixs):
+        for average_pipeline in self.average_pipelines.values():
+            average_pipeline.run(epochs, bad_ixs)

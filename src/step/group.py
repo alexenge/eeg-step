@@ -2,16 +2,16 @@ from os import PathLike
 
 import pandas as pd
 
+from .average import Average, AveragesPipeline
 from .component import Component, ComponentsPipeline
 from .epoch import EpochPipeline
 from .helpers import (
-    _dict_to_average_configs,
     _dict_to_list,
     _get_participant_id,
     _process_files_input,
 )
 from .input import InputPipeline
-from .participant import ParticipantConfig, ParticipantPipeline
+from .participant import ParticipantPipeline
 from .preproc import PreprocPipeline
 
 
@@ -42,7 +42,7 @@ class GroupPipeline:
         reject: float = 200.0,
         components: list[Component] | Component = None,
         compute_se: bool = False,
-        average_by: dict = None,
+        averages: list[Average] | Average = None,
     ):
         self.raw_files = raw_files
         self.log_files = log_files
@@ -65,15 +65,14 @@ class GroupPipeline:
         self.baseline = baseline
         self.reject = reject
         self.components = components
-        self.average_by = average_by
+        self.compute_se = compute_se
+        self.averages = averages
 
         self._process_raw_files()
         self._get_participant_ids()
         self._process_log_files()
         self._process_besa_files()
         self._process_bad_channels()
-
-        average_configs = _dict_to_average_configs(average_by)
 
         self.participant_pipelines = dict()
         for (
@@ -119,16 +118,18 @@ class GroupPipeline:
                 reject=reject,
             )
 
-            components_pipeline = ComponentsPipeline(components, compute_se)
+            components_pipeline = ComponentsPipeline(
+                components=components, compute_se=compute_se
+            )
 
-            participant_config = ParticipantConfig(average_configs)
+            averages_pipeline = AveragesPipeline(averages=averages)
 
             participant_pipeline = ParticipantPipeline(
-                participant_config,
                 input_pipeline,
                 preproc_pipeline,
                 epoch_pipeline,
                 components_pipeline,
+                averages_pipeline,
             )
             self.participant_pipelines[participant_id] = participant_pipeline
 

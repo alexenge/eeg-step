@@ -2,8 +2,6 @@ from pathlib import Path
 
 from pandas.api.types import is_list_like
 
-from .average import AverageConfig
-
 
 def _process_files_input(files_input, file_extensions, n_out=None):
     """Process the `..._files` input arguments of the pipeline."""
@@ -57,17 +55,3 @@ def _get_participant_id(raw_file):
         participant_id = Path(raw_file).stem
 
     return participant_id
-
-
-def _dict_to_average_configs(input_dict):
-    """Convert a dictionary to a list of AverageConfig objects.
-
-    Dictionary keys are the names of the averages and dictionary values are the
-    corresponding query strings."""
-
-    average_configs = []
-    for name, query in input_dict.items():
-        average_config = AverageConfig(name=name, query=query)
-        average_configs.append(average_config)
-
-    return average_configs

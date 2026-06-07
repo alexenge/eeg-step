@@ -3,14 +3,14 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from step.average import AverageConfig, AveragePipeline
+from step.average import Average, AveragePipeline, AveragesPipeline
 from step.component import Component, ComponentPipeline, ComponentsPipeline
 from step.datasets.ucap import get_ucap
 from step.epoch import EpochPipeline
 from step.group import GroupPipeline
 from step.helpers import _get_participant_id
 from step.input import InputPipeline
-from step.participant import ParticipantConfig, ParticipantPipeline
+from step.participant import ParticipantPipeline
 from step.preproc import PreprocPipeline
 
 
@@ -320,83 +320,79 @@ def sample_components_pipeline(sample_components, sample_epochs, sample_bad_ixs)
 
 
 @pytest.fixture(scope="session")
-def sample_average_config_blurr():
-    """Creates an AverageConfig."""
+def sample_average_blurr():
+    """Creates an Average for the 'blurr' condition."""
 
-    return AverageConfig(name="blurr", query="n_b == 'blurr'")
-
-
-@pytest.fixture(scope="session")
-def sample_average_config_normal():
-    """Creates an AverageConfig."""
-
-    return AverageConfig(name="normal", query="n_b == 'normal'")
+    return Average(name="blurr", query="n_b == 'blurr'")
 
 
 @pytest.fixture(scope="session")
-def sample_average_configs(sample_average_config_blurr, sample_average_config_normal):
-    """Creates a list of AverageConfigs."""
+def sample_average_normal():
+    """Creates an Average for the 'normal' condition."""
 
-    return [sample_average_config_blurr, sample_average_config_normal]
+    return Average(name="normal", query="n_b == 'normal'")
 
 
 @pytest.fixture(scope="session")
-def sample_average_pipeline_blurr(
-    sample_average_config_blurr,
-    sample_epoch_pipeline,
+def sample_average_pipeline(
+    sample_average_blurr,
+    sample_epochs,
+    sample_bad_ixs,
 ):
-    """Creates and runs an AveragePipeline for the sample data."""
+    """Creates and runs an AveragePipeline for the 'blurr' condition."""
 
-    average_pipeline = AveragePipeline(sample_average_config_blurr)
+    average_pipeline = AveragePipeline(sample_average_blurr)
 
-    epochs = sample_epoch_pipeline.epochs
-    bad_ixs = sample_epoch_pipeline.bad_ixs
-
+    epochs = sample_epochs.copy()
+    bad_ixs = sample_bad_ixs.copy()
     average_pipeline.run(epochs, bad_ixs)
 
     return average_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_average_pipeline_normal(
-    sample_average_config_normal,
-    sample_epoch_pipeline,
+def sample_averages(
+    sample_average_blurr,
+    sample_average_normal,
 ):
-    """Creates and runs an AveragePipeline for the sample data."""
+    """Returns a list of Averages for the 'blurr' and 'normal' conditions."""
 
-    average_pipeline = AveragePipeline(sample_average_config_normal)
-
-    epochs = sample_epoch_pipeline.epochs
-    bad_ixs = sample_epoch_pipeline.bad_ixs
-
-    average_pipeline.run(epochs, bad_ixs)
-
-    return average_pipeline
+    return [sample_average_blurr, sample_average_normal]
 
 
 @pytest.fixture(scope="session")
-def sample_participant_config(sample_average_configs):
-    """Creates a ParticipantConfig for the sample data."""
+def sample_averages_pipeline(
+    sample_averages,
+    sample_epochs,
+    sample_bad_ixs,
+):
+    """Creates and runs an AveragesPipeline for the 'blurr' and 'normal' conditions."""
 
-    return ParticipantConfig(average_configs=sample_average_configs)
+    averages_pipeline = AveragesPipeline(sample_averages)
+
+    epochs = sample_epochs.copy()
+    bad_ixs = sample_bad_ixs.copy()
+    averages_pipeline.run(epochs, bad_ixs)
+
+    return averages_pipeline
 
 
 @pytest.fixture(scope="session")
 def sample_participant_pipeline(
-    sample_participant_config,
     sample_input_pipeline_besa,
     sample_preproc_pipeline_besa,
     sample_epoch_pipeline,
     sample_components_pipeline,
+    sample_averages_pipeline,
 ):
     """Creates and runs a ParticipantPipeline for the sample data."""
 
     participant_pipeline = ParticipantPipeline(
-        sample_participant_config,
         sample_input_pipeline_besa,
         sample_preproc_pipeline_besa,
         sample_epoch_pipeline,
         sample_components_pipeline,
+        sample_averages_pipeline,
     )
     participant_pipeline.run()
 
@@ -439,20 +435,12 @@ def sample_besa_files(sample_data):
 
 
 @pytest.fixture(scope="session")
-def sample_average_by():
-    """Returns a dictionary specifying how to average the epochs for the sample
-    data."""
-
-    return {"blurr": "n_b == 'blurr'", "normal": "n_b == 'normal'"}
-
-
-@pytest.fixture(scope="session")
 def sample_group_pipeline(
     sample_raw_files_folder,
     sample_log_files_folder,
     sample_triggers,
     sample_components,
-    sample_average_by,
+    sample_averages,
 ):
     group_pipeline = GroupPipeline(
         raw_files=sample_raw_files_folder,
@@ -460,7 +448,7 @@ def sample_group_pipeline(
         downsample_sfreq=100,
         triggers=sample_triggers,
         components=sample_components,
-        average_by=sample_average_by,
+        averages=sample_averages,
     )
     group_pipeline.run()
 
@@ -474,7 +462,7 @@ def sample_group_pipeline_besa(
     sample_besa_files,
     sample_triggers,
     sample_components,
-    sample_average_by,
+    sample_averages,
 ):
     group_pipeline = GroupPipeline(
         raw_files=sample_raw_files,
@@ -485,7 +473,7 @@ def sample_group_pipeline_besa(
         ica_method=None,
         triggers=sample_triggers,
         components=sample_components,
-        average_by=sample_average_by,
+        averages=sample_averages,
     )
     group_pipeline.run()
 
