@@ -2,17 +2,17 @@ from os import PathLike
 
 import pandas as pd
 
-from .component import ComponentConfig
-from .epoch import EpochConfig
+from .average import Average, AveragesPipeline
+from .component import Component, ComponentsPipeline
+from .epoch import EpochPipeline
 from .helpers import (
-    _dict_to_average_configs,
     _dict_to_list,
     _get_participant_id,
     _process_files_input,
 )
-from .input import InputConfig
-from .participant import ParticipantConfig, ParticipantPipeline
-from .preproc import PreprocConfig
+from .input import InputPipeline
+from .participant import ParticipantPipeline
+from .preproc import PreprocPipeline
 
 
 class GroupPipeline:
@@ -27,7 +27,7 @@ class GroupPipeline:
         heog_channels: list[str] | str = "auto",
         veog_channels: list[str] | str = "auto",
         montage: str | PathLike = "easycap-M1",
-        bad_channels: dict[list[str]] | str = "auto",
+        bad_channels: dict[list[str]] | str = None,
         ref_channels: list[str] | str = "average",
         ica_method: str = "fastica",
         ica_n_components: int | float = None,
@@ -40,8 +40,9 @@ class GroupPipeline:
         tmax: float = 0.8,
         baseline: tuple[float, float] = (-0.2, 0.0),
         reject: float = 200.0,
-        components: list[ComponentConfig] = None,
-        average_by: dict = None,
+        components: list[Component] | Component = None,
+        compute_se: bool = False,
+        averages: list[Average] | Average = None,
     ):
         self.raw_files = raw_files
         self.log_files = log_files
@@ -64,7 +65,8 @@ class GroupPipeline:
         self.baseline = baseline
         self.reject = reject
         self.components = components
-        self.average_by = average_by
+        self.compute_se = compute_se
+        self.averages = averages
 
         self._process_raw_files()
         self._get_participant_ids()
@@ -72,19 +74,6 @@ class GroupPipeline:
         self._process_besa_files()
         self._process_bad_channels()
 
-        # Common configurations for all participants
-        epoch_config = EpochConfig(
-            triggers=triggers,
-            triggers_column=triggers_column,
-            tmin=tmin,
-            tmax=tmax,
-            baseline=baseline,
-            reject=reject,
-        )
-        component_configs = components
-        average_configs = _dict_to_average_configs(average_by)
-
-        # Participant-specific configurations and pipelines
         self.participant_pipelines = dict()
         for (
             raw_file,
@@ -99,14 +88,14 @@ class GroupPipeline:
             self.participant_ids,
             self.bad_channels_,
         ):
-            input_config = InputConfig(
+            input_pipeline = InputPipeline(
                 raw_file=raw_file,
                 log_file=log_file,
                 besa_file=besa_file,
                 participant_id=participant_id,
             )
 
-            preproc_config = PreprocConfig(
+            preproc_pipeline = PreprocPipeline(
                 downsample_sfreq=downsample_sfreq,
                 heog_channels=heog_channels,
                 veog_channels=veog_channels,
@@ -120,15 +109,28 @@ class GroupPipeline:
                 lowpass_freq=lowpass_freq,
             )
 
-            participant_config = ParticipantConfig(
-                input_config,
-                preproc_config,
-                epoch_config,
-                component_configs,
-                average_configs,
+            epoch_pipeline = EpochPipeline(
+                triggers=triggers,
+                triggers_column=triggers_column,
+                tmin=tmin,
+                tmax=tmax,
+                baseline=baseline,
+                reject=reject,
             )
 
-            participant_pipeline = ParticipantPipeline(participant_config)
+            components_pipeline = ComponentsPipeline(
+                components=components, compute_se=compute_se
+            )
+
+            averages_pipeline = AveragesPipeline(averages=averages)
+
+            participant_pipeline = ParticipantPipeline(
+                input_pipeline,
+                preproc_pipeline,
+                epoch_pipeline,
+                components_pipeline,
+                averages_pipeline,
+            )
             self.participant_pipelines[participant_id] = participant_pipeline
 
     def run(self):
@@ -160,8 +162,8 @@ class GroupPipeline:
     def _process_bad_channels(self):
         if isinstance(self.bad_channels, list):
             self.bad_channels_ = self.bad_channels
-        elif self.bad_channels == "auto":
-            self.bad_channels_ = ["auto"] * len(self.participant_ids)
+        elif self.bad_channels is None or self.bad_channels == "auto":
+            self.bad_channels_ = [self.bad_channels] * len(self.participant_ids)
         elif isinstance(self.bad_channels, dict):
             self.bad_channels_ = _dict_to_list(self.bad_channels, self.participant_ids)
         else:

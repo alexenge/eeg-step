@@ -3,15 +3,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from step.average import AverageConfig, AveragePipeline
-from step.component import ComponentConfig, ComponentPipeline
+from step.average import Average, AveragePipeline, AveragesPipeline
+from step.component import Component, ComponentPipeline, ComponentsPipeline
 from step.datasets.ucap import get_ucap
-from step.epoch import EpochConfig, EpochPipeline
+from step.epoch import EpochPipeline
 from step.group import GroupPipeline
 from step.helpers import _get_participant_id
-from step.input import InputConfig, InputPipeline
-from step.participant import ParticipantConfig, ParticipantPipeline
-from step.preproc import PreprocConfig, PreprocPipeline
+from step.input import InputPipeline
+from step.participant import ParticipantPipeline
+from step.preproc import PreprocPipeline
 
 
 @pytest.fixture(scope="session")
@@ -50,31 +50,6 @@ def sample_besa_file(sample_data):
 
 
 @pytest.fixture(scope="session")
-def sample_input_config(sample_raw_file, sample_log_file, sample_participant_id):
-    """Creates an InputConfig for the sample data."""
-
-    return InputConfig(
-        participant_id=sample_participant_id,
-        raw_file=sample_raw_file,
-        log_file=sample_log_file,
-    )
-
-
-@pytest.fixture(scope="session")
-def sample_input_config_besa(
-    sample_raw_file, sample_log_file, sample_besa_file, sample_participant_id
-):
-    """Creates an InputConfig for the sample data incl. BESA file."""
-
-    return InputConfig(
-        participant_id=sample_participant_id,
-        raw_file=sample_raw_file,
-        log_file=sample_log_file,
-        besa_file=sample_besa_file,
-    )
-
-
-@pytest.fixture(scope="session")
 def sample_raw_file_combine(sample_data):
     """Returns the raw files for the first two participants in the sample data."""
 
@@ -90,90 +65,102 @@ def sample_participant_id_combine(sample_raw_file_combine):
 
 
 @pytest.fixture(scope="session")
-def sample_input_config_combine(sample_raw_file_combine, sample_participant_id_combine):
-    """Creates an InputConfig for the case when a participant has
-    multiple EEG files that need to be combined."""
-
-    return InputConfig(
-        participant_id=sample_participant_id_combine,
-        raw_file=sample_raw_file_combine,
-    )
-
-
-@pytest.fixture(scope="session")
-def sample_input_pipeline(sample_input_config):
+def sample_input_pipeline(sample_participant_id, sample_raw_file, sample_log_file):
     """Creates and runs an InputPipeline for the sample data."""
 
-    input_pipeline = InputPipeline(sample_input_config)
+    input_pipeline = InputPipeline(
+        participant_id=sample_participant_id,
+        raw_file=sample_raw_file,
+        log_file=sample_log_file,
+    )
+
     input_pipeline.run()
 
     return input_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_input_pipeline_besa(sample_input_config_besa):
+def sample_input_pipeline_besa(
+    sample_participant_id, sample_raw_file, sample_log_file, sample_besa_file
+):
     """Creates and runs an InputPipeline for the sample data using BESA."""
 
-    input_pipeline = InputPipeline(sample_input_config_besa)
+    input_pipeline = InputPipeline(
+        participant_id=sample_participant_id,
+        raw_file=sample_raw_file,
+        log_file=sample_log_file,
+        besa_file=sample_besa_file,
+    )
+
     input_pipeline.run()
 
     return input_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_input_pipeline_combine(sample_input_config_combine):
+def sample_input_pipeline_combine(
+    sample_participant_id_combine, sample_raw_file_combine
+):
     """Creates and runs an InputPipeline for the case when a participant has
     multiple EEG files that need to be combined."""
 
-    input_pipeline = InputPipeline(sample_input_config_combine)
+    input_pipeline = InputPipeline(
+        participant_id=sample_participant_id_combine, raw_file=sample_raw_file_combine
+    )
+
     input_pipeline.run()
 
     return input_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_preproc_config():
-    """Creates a PreprocConfig for the sample data using ICA and
-    automatic bad channel detection."""
+def sample_raw(sample_input_pipeline):
+    """Returns the raw data for the sample data."""
 
-    return PreprocConfig(downsample_sfreq=100, bad_channels="auto")
-
-
-@pytest.fixture(scope="session")
-def sample_preproc_config_besa():
-    """Creates a PreprocConfig for the sample data using BESA
-    and manual bad channel selection."""
-
-    return PreprocConfig(
-        downsample_sfreq=100, bad_channels=["Fp1", "PO8"], ica_method=None
-    )
+    return sample_input_pipeline.raw
 
 
 @pytest.fixture(scope="session")
-def sample_preproc_pipeline(sample_preproc_config, sample_input_pipeline):
+def sample_preproc_pipeline(sample_raw):
     """Creates and runs a PreprocPipeline for the sample data using
     ICA."""
 
-    preproc_pipeline = PreprocPipeline(sample_preproc_config)
-    raw = sample_input_pipeline.raw
+    preproc_pipeline = PreprocPipeline(downsample_sfreq=100, bad_channels="auto")
+
+    raw = sample_raw.copy()
     preproc_pipeline.run(raw)
 
     return preproc_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_preproc_pipeline_besa(
-    sample_preproc_config_besa, sample_input_pipeline_besa
-):
+def sample_raw_besa(sample_input_pipeline_besa):
+    """Returns the raw data for the sample data using BESA."""
+
+    return sample_input_pipeline_besa.raw
+
+
+@pytest.fixture(scope="session")
+def sample_besa(sample_input_pipeline_besa):
+    """Returns the BESA data for the sample data."""
+
+    return sample_input_pipeline_besa.besa
+
+
+@pytest.fixture(scope="session")
+def sample_preproc_pipeline_besa(sample_raw_besa, sample_besa):
     """Creates and runs a PreprocPipeline for the sample data using BESA
     and manual bad channel selection."""
 
-    preproc_pipeline = PreprocPipeline(sample_preproc_config_besa)
-    raw = sample_input_pipeline_besa.raw
-    besa = sample_input_pipeline_besa.besa
-    preproc_pipeline.run(raw, besa)
+    preproc_pipeline_besa = PreprocPipeline(
+        downsample_sfreq=100, bad_channels=["Fp1", "PO8"], ica_method=None
+    )
 
-    return preproc_pipeline
+    raw = sample_raw_besa.copy()
+    besa = sample_besa.copy()
+    preproc_pipeline_besa.run(raw, besa)
+
+    return preproc_pipeline_besa
 
 
 @pytest.fixture(scope="session")
@@ -201,182 +188,212 @@ def sample_triggers():
 
 
 @pytest.fixture(scope="session")
-def sample_epoch_config(sample_triggers):
-    """Creates an EpochConfig for the sample data."""
+def sample_raw_preproc(sample_preproc_pipeline):
+    """Returns the preprocessed raw data for the sample data."""
 
-    return EpochConfig(triggers=sample_triggers)
-
-
-@pytest.fixture(scope="session")
-def sample_epoch_config_match(sample_triggers):
-    """Creates an EpochConfig for the sample data."""
-
-    return EpochConfig(triggers=sample_triggers, triggers_column="bot")
+    return sample_preproc_pipeline.raw
 
 
 @pytest.fixture(scope="session")
-def sample_epoch_pipeline(
-    sample_epoch_config, sample_input_pipeline, sample_preproc_pipeline
-):
+def sample_log(sample_input_pipeline):
+    """Returns the log data for the sample data."""
+
+    return sample_input_pipeline.log
+
+
+@pytest.fixture(scope="session")
+def sample_epoch_pipeline(sample_triggers, sample_raw_preproc, sample_log):
     """Creates and runs an EpochPipeline for the sample data."""
 
-    epoch_pipeline = EpochPipeline(sample_epoch_config)
-    raw = sample_preproc_pipeline.raw
-    log = sample_input_pipeline.log
+    epoch_pipeline = EpochPipeline(triggers=sample_triggers)
+
+    raw = sample_raw_preproc.copy()
+    log = sample_log.copy()
     epoch_pipeline.run(raw, log)
 
     return epoch_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_epoch_pipeline_match(
-    sample_epoch_config_match, sample_input_pipeline, sample_preproc_pipeline
-):
-    """Creates and runs an EpochPipeline for the sample data."""
+def sample_raw_match(sample_raw_preproc):
+    """Returns a copy of the raw data for the sample data with some trials/triggers
+    artificially removed to test automatic matching of the log file."""
 
-    epoch_pipeline = EpochPipeline(sample_epoch_config_match)
-    # Let's pretend some trials/triggers are missing from the EEG recording
-    raw_to_match = sample_preproc_pipeline.raw.copy()
+    raw_match = sample_raw_preproc.copy()
     ixs = np.concatenate(
         [
             np.arange(0, 1001),
             np.arange(5000, 6001),
-            np.arange(10000, len(raw_to_match.annotations)),
+            np.arange(10000, len(raw_match.annotations)),
         ]
     )
-    raw_to_match.annotations.delete(ixs)
-    log = sample_input_pipeline.log
-    epoch_pipeline.run(raw_to_match, log)
+    raw_match.annotations.delete(ixs)
+
+    return raw_match
+
+
+@pytest.fixture(scope="session")
+def sample_epoch_pipeline_match(sample_triggers, sample_raw_match, sample_log):
+    """Creates and runs an EpochPipeline for the sample data."""
+
+    epoch_pipeline = EpochPipeline(triggers=sample_triggers, triggers_column="bot")
+
+    raw = sample_raw_match.copy()
+    log = sample_log.copy()
+    epoch_pipeline.run(raw, log)
 
     return epoch_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_component_config_n2():
-    """Creates a ComponentConfig for the N2 component."""
+def sample_component_n2():
+    """Creates an ERP component definition for the N2 component."""
 
-    return ComponentConfig(
+    return Component(
         name="N2",
         tmin=0.25,
         tmax=0.35,
         roi=["FC1", "FC2", "C1", "C2", "Cz"],
-        compute_se=True,
     )
 
 
 @pytest.fixture(scope="session")
-def sample_component_config_p3b():
-    """Creates a ComponentConfig for the P3b component."""
+def sample_epochs(sample_epoch_pipeline):
+    """Returns the epochs for the sample data."""
 
-    return ComponentConfig(
-        name="P3b",
-        tmin=0.4,
-        tmax=0.55,
-        roi=["CP3", "CP1", "CPz", "CP2", "CP4", "P3", "Pz", "P4", "PO3", "POz", "PO4"],
-        compute_se=False,
-    )
+    return sample_epoch_pipeline.epochs
 
 
 @pytest.fixture(scope="session")
-def sample_component_configs(sample_component_config_n2, sample_component_config_p3b):
-    """Creates a list of ComponentConfigs for the sample data."""
+def sample_bad_ixs(sample_epoch_pipeline):
+    """Returns the bad trial indices for the sample data."""
 
-    return [sample_component_config_n2, sample_component_config_p3b]
+    return sample_epoch_pipeline.bad_ixs
 
 
 @pytest.fixture(scope="session")
-def sample_component_pipeline(sample_component_config_n2, sample_epoch_pipeline):
+def sample_component_pipeline(sample_component_n2, sample_epochs, sample_bad_ixs):
     """Creates and runs a ComponentPipeline for the sample data."""
 
-    component_pipeline = ComponentPipeline(sample_component_config_n2)
+    component_pipeline = ComponentPipeline(sample_component_n2, compute_se=True)
 
-    epochs = sample_epoch_pipeline.epochs
-    bad_ixs = sample_epoch_pipeline.bad_ixs
-
+    epochs = sample_epochs.copy()
+    bad_ixs = sample_bad_ixs.copy()
     component_pipeline.run(epochs, bad_ixs)
 
     return component_pipeline
 
 
 @pytest.fixture(scope="session")
-def sample_average_config_blurr():
-    """Creates an AverageConfig."""
+def sample_component_p3b():
+    """Creates an ERP component definition for the P3b component."""
 
-    return AverageConfig(name="blurr", query="n_b == 'blurr'")
-
-
-@pytest.fixture(scope="session")
-def sample_average_config_normal():
-    """Creates an AverageConfig."""
-
-    return AverageConfig(name="normal", query="n_b == 'normal'")
-
-
-@pytest.fixture(scope="session")
-def sample_average_configs(sample_average_config_blurr, sample_average_config_normal):
-    """Creates a list of AverageConfigs."""
-
-    return [sample_average_config_blurr, sample_average_config_normal]
-
-
-@pytest.fixture(scope="session")
-def sample_average_pipeline_blurr(
-    sample_average_config_blurr,
-    sample_epoch_pipeline,
-):
-    """Creates and runs an AveragePipeline for the sample data."""
-
-    average_pipeline = AveragePipeline(sample_average_config_blurr)
-
-    epochs = sample_epoch_pipeline.epochs
-    bad_ixs = sample_epoch_pipeline.bad_ixs
-
-    average_pipeline.run(epochs, bad_ixs)
-
-    return average_pipeline
-
-
-@pytest.fixture(scope="session")
-def sample_average_pipeline_normal(
-    sample_average_config_normal,
-    sample_epoch_pipeline,
-):
-    """Creates and runs an AveragePipeline for the sample data."""
-
-    average_pipeline = AveragePipeline(sample_average_config_normal)
-
-    epochs = sample_epoch_pipeline.epochs
-    bad_ixs = sample_epoch_pipeline.bad_ixs
-
-    average_pipeline.run(epochs, bad_ixs)
-
-    return average_pipeline
-
-
-@pytest.fixture(scope="session")
-def sample_participant_config(
-    sample_input_config_besa,
-    sample_preproc_config_besa,
-    sample_epoch_config,
-    sample_component_configs,
-    sample_average_configs,
-):
-    """Creates a ParticipantConfig for the sample data."""
-
-    return ParticipantConfig(
-        input_config=sample_input_config_besa,
-        preproc_config=sample_preproc_config_besa,
-        epoch_config=sample_epoch_config,
-        component_configs=sample_component_configs,
-        average_configs=sample_average_configs,
+    return Component(
+        name="P3b",
+        tmin=0.4,
+        tmax=0.55,
+        roi=["CP3", "CP1", "CPz", "CP2", "CP4", "P3", "Pz", "P4", "PO3", "POz", "PO4"],
     )
 
 
 @pytest.fixture(scope="session")
-def sample_participant_pipeline(sample_participant_config):
+def sample_components(
+    sample_component_n2,
+    sample_component_p3b,
+):
+    """Returns a list of ERP component definitions for the sample data."""
+
+    return [sample_component_n2, sample_component_p3b]
+
+
+@pytest.fixture(scope="session")
+def sample_components_pipeline(sample_components, sample_epochs, sample_bad_ixs):
+    """Creates and runs a ComponentsPipeline for the sample data."""
+
+    components_pipeline = ComponentsPipeline(sample_components, compute_se=True)
+
+    epochs = sample_epochs.copy()
+    bad_ixs = sample_bad_ixs.copy()
+    components_pipeline.run(epochs, bad_ixs)
+
+    return components_pipeline
+
+
+@pytest.fixture(scope="session")
+def sample_average_blurr():
+    """Creates an Average for the 'blurr' condition."""
+
+    return Average(name="blurr", query="n_b == 'blurr'")
+
+
+@pytest.fixture(scope="session")
+def sample_average_normal():
+    """Creates an Average for the 'normal' condition."""
+
+    return Average(name="normal", query="n_b == 'normal'")
+
+
+@pytest.fixture(scope="session")
+def sample_average_pipeline(
+    sample_average_blurr,
+    sample_epochs,
+    sample_bad_ixs,
+):
+    """Creates and runs an AveragePipeline for the 'blurr' condition."""
+
+    average_pipeline = AveragePipeline(sample_average_blurr)
+
+    epochs = sample_epochs.copy()
+    bad_ixs = sample_bad_ixs.copy()
+    average_pipeline.run(epochs, bad_ixs)
+
+    return average_pipeline
+
+
+@pytest.fixture(scope="session")
+def sample_averages(
+    sample_average_blurr,
+    sample_average_normal,
+):
+    """Returns a list of Averages for the 'blurr' and 'normal' conditions."""
+
+    return [sample_average_blurr, sample_average_normal]
+
+
+@pytest.fixture(scope="session")
+def sample_averages_pipeline(
+    sample_averages,
+    sample_epochs,
+    sample_bad_ixs,
+):
+    """Creates and runs an AveragesPipeline for the 'blurr' and 'normal' conditions."""
+
+    averages_pipeline = AveragesPipeline(sample_averages)
+
+    epochs = sample_epochs.copy()
+    bad_ixs = sample_bad_ixs.copy()
+    averages_pipeline.run(epochs, bad_ixs)
+
+    return averages_pipeline
+
+
+@pytest.fixture(scope="session")
+def sample_participant_pipeline(
+    sample_input_pipeline_besa,
+    sample_preproc_pipeline_besa,
+    sample_epoch_pipeline,
+    sample_components_pipeline,
+    sample_averages_pipeline,
+):
     """Creates and runs a ParticipantPipeline for the sample data."""
 
-    participant_pipeline = ParticipantPipeline(sample_participant_config)
+    participant_pipeline = ParticipantPipeline(
+        sample_input_pipeline_besa,
+        sample_preproc_pipeline_besa,
+        sample_epoch_pipeline,
+        sample_components_pipeline,
+        sample_averages_pipeline,
+    )
     participant_pipeline.run()
 
     return participant_pipeline
@@ -418,29 +435,20 @@ def sample_besa_files(sample_data):
 
 
 @pytest.fixture(scope="session")
-def sample_average_by():
-    """Returns a dictionary specifying how to average the epochs for the sample
-    data."""
-
-    return {"blurr": "n_b == 'blurr'", "normal": "n_b == 'normal'"}
-
-
-@pytest.fixture(scope="session")
 def sample_group_pipeline(
     sample_raw_files_folder,
     sample_log_files_folder,
     sample_triggers,
-    sample_component_configs,
-    sample_average_by,
+    sample_components,
+    sample_averages,
 ):
     group_pipeline = GroupPipeline(
         raw_files=sample_raw_files_folder,
         log_files=sample_log_files_folder,
         downsample_sfreq=100,
-        bad_channels={"09": ["Fp1", "PO8"], "12": []},
         triggers=sample_triggers,
-        components=sample_component_configs,
-        average_by=sample_average_by,
+        components=sample_components,
+        averages=sample_averages,
     )
     group_pipeline.run()
 
@@ -453,18 +461,19 @@ def sample_group_pipeline_besa(
     sample_log_files,
     sample_besa_files,
     sample_triggers,
-    sample_component_configs,
-    sample_average_by,
+    sample_components,
+    sample_averages,
 ):
     group_pipeline = GroupPipeline(
         raw_files=sample_raw_files,
         log_files=sample_log_files,
         besa_files=sample_besa_files,
         downsample_sfreq=100,
-        bad_channels="auto",
+        bad_channels={"09": ["Fp1", "PO8"]},
+        ica_method=None,
         triggers=sample_triggers,
-        components=sample_component_configs,
-        average_by=sample_average_by,
+        components=sample_components,
+        averages=sample_averages,
     )
     group_pipeline.run()
 

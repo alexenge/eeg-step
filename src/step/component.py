@@ -7,21 +7,21 @@ from pandas.api.types import is_list_like
 
 
 @dataclass
-class ComponentConfig:
-    """The configuration for the component pipeline."""
+class Component:
+    """The definition of a single ERP component."""
 
     name: str
     tmin: float
     tmax: float
     roi: str | list[str]
-    compute_se: bool = False
 
 
 class ComponentPipeline:
-    """The component pipeline for computing single trial amplitudes."""
+    """The pipeline for computing single trial amplitudes for a single ERP component."""
 
-    def __init__(self, config: ComponentConfig):
-        self.config = config
+    def __init__(self, component: Component, compute_se: bool = False):
+        self.component = component
+        self.compute_se = compute_se
 
     def run(self, epochs, bad_ixs):
         """Run the component pipeline."""
@@ -29,10 +29,11 @@ class ComponentPipeline:
         self.epochs = epochs
         self.bad_ixs = bad_ixs
 
-        if is_list_like(self.config.roi):
-            self.roi = self.config.roi
-        else:
-            self.roi = [self.config.roi]
+        self.roi = (
+            self.component.roi
+            if is_list_like(self.component.roi)
+            else [self.component.roi]
+        )
 
         self._add_roi_channel()
 
@@ -40,26 +41,26 @@ class ComponentPipeline:
 
         self._compute_amplitudes()
 
-        if self.config.compute_se:
-            self.name_se = f"{self.config.name}_se"
+        if self.compute_se:
+            self.name_se = f"{self.component.name}_se"
             self._compute_standard_errors()
 
     def _add_roi_channel(self):
         """Add a new virtual channel by averaging over the region of interest."""
 
-        roi_dict = {self.config.name: pick_channels(self.epochs.ch_names, self.roi)}
+        roi_dict = {self.component.name: pick_channels(self.epochs.ch_names, self.roi)}
         epochs_roi = combine_channels(self.epochs, roi_dict)
 
         self.epochs.add_channels([epochs_roi], force_update_info=True)
-        self.epochs.set_channel_types({self.config.name: "misc"}, verbose="ERROR")
+        self.epochs.set_channel_types({self.component.name: "misc"}, verbose="ERROR")
 
     def _get_data(self):
         """Extract the time series data for the time window and region of interest."""
 
         self.data = (
             self.epochs.copy()
-            .pick_channels([self.config.name])
-            .crop(self.config.tmin, self.config.tmax)
+            .pick_channels([self.component.name])
+            .crop(self.component.tmin, self.component.tmax)
             .get_data(units="uAU")  # Arbitrary Units, actually microvolts
         )
 
@@ -69,7 +70,7 @@ class ComponentPipeline:
 
         self.amplitudes = self.data.mean(axis=(1, 2))
         self.amplitudes[self.bad_ixs] = np.nan
-        self.epochs.metadata[self.config.name] = self.amplitudes
+        self.epochs.metadata[self.component.name] = self.amplitudes
 
     def _compute_standard_errors(self):
         """Compute single-trial standard errors by computing the standard error
@@ -82,3 +83,26 @@ class ComponentPipeline:
 
         self.standard_errors = self.standard_deviations / np.sqrt(n_samples)
         self.epochs.metadata[self.name_se] = self.standard_errors
+
+
+class ComponentsPipeline:
+    """The pipeline for computing single trial amplitudes for multiple ERP
+    components."""
+
+    def __init__(
+        self, components: list[Component] | Component, compute_se: bool = False
+    ):
+        self.components = components
+        self.compute_se = compute_se
+
+        self.components_ = components if is_list_like(components) else [components]
+
+        self.component_pipelines = {}
+        for component in self.components_:
+            self.component_pipelines[component.name] = ComponentPipeline(
+                component, compute_se
+            )
+
+    def run(self, epochs, bad_ixs):
+        for component_pipeline in self.component_pipelines.values():
+            component_pipeline.run(epochs, bad_ixs)
