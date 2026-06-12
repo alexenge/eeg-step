@@ -47,6 +47,8 @@ htmlcov/
 # ================================
 # VS Code
 .vscode/
+# Positron
+.posit/
 # PyCharm
 .idea/
 # Sublime
