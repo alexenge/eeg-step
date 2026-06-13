@@ -32,14 +32,16 @@ class ParticipantPipeline:
 
     def run(self):
         self.input_pipeline.run()
+        self.raw = self.input_pipeline.raw
+        self.log = self.input_pipeline.log
+        self.besa = self.input_pipeline.besa
 
-        raw = self.input_pipeline.raw
-        besa = self.input_pipeline.besa
-        self.preproc_pipeline.run(raw, besa)
+        self.preproc_pipeline.run(self.raw, self.besa)
+        self.raw_preproc = self.preproc_pipeline.raw
 
-        raw_preproc = self.preproc_pipeline.raw
-        log = self.input_pipeline.log
-        self.epoch_pipeline.run(raw_preproc, log)
+        self.epoch_pipeline.run(self.raw_preproc, self.log)
+        self.epochs = self.epoch_pipeline.epochs
+        self.bad_ixs = self.epoch_pipeline.bad_ixs
 
         # TODO: Maybe this could be done on the continuous raw data (i.e.,
         # fully within the preproc pipeline) rather then on the epochs.
@@ -47,22 +49,17 @@ class ParticipantPipeline:
         if self.preproc_pipeline.bad_channels == "auto":
             self._detect_bad_channels_and_rerun()
 
-        epochs = self.epoch_pipeline.epochs
-        bad_ixs = self.epoch_pipeline.bad_ixs
-        self.components_pipeline.run(epochs, bad_ixs)
+        self.components_pipeline.run(self.epochs, self.bad_ixs)
 
-        self.averages_pipeline.run(epochs, bad_ixs)
+        self.averages_pipeline.run(self.epochs, self.bad_ixs)
 
     def _detect_bad_channels_and_rerun(self):
         bad_channels = self.epoch_pipeline.detect_bad_channels()
 
         if len(bad_channels) > 0:
-            self.preproc_pipeline.bad_channels = bad_channels
+            self.preproc_pipeline_rerun = self.preproc_pipeline.copy()
+            self.preproc_pipeline_rerun.bad_channels = bad_channels
 
-            raw = self.input_pipeline.raw
-            besa = self.input_pipeline.besa
-            self.preproc_pipeline.run(raw, besa)
-
-            raw_preproc = self.preproc_pipeline.raw
-            log = self.input_pipeline.log
-            self.epoch_pipeline.run(raw_preproc, log)
+            self.preproc_pipeline_rerun.run(self.raw, self.besa)
+            self.raw_preproc_rerun = self.preproc_pipeline_rerun.raw
+            self.epoch_pipeline.run(self.raw_preproc_rerun, self.log)
