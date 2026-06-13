@@ -125,7 +125,9 @@ def sample_preproc_pipeline(sample_raw):
     """Creates and runs a PreprocPipeline for the sample data using
     ICA."""
 
-    preproc_pipeline = PreprocPipeline(downsample_sfreq=100, bad_channels="auto")
+    preproc_pipeline = PreprocPipeline(
+        downsample_sfreq=100, bad_channels=["Fp1", "PO8"]
+    )
 
     raw = sample_raw.copy()
     preproc_pipeline.run(raw)
@@ -153,7 +155,7 @@ def sample_preproc_pipeline_besa(sample_raw_besa, sample_besa):
     and manual bad channel selection."""
 
     preproc_pipeline_besa = PreprocPipeline(
-        downsample_sfreq=100, bad_channels=["Fp1", "PO8"], ica_method=None
+        downsample_sfreq=100, bad_channels="auto", ica_method=None
     )
 
     raw = sample_raw_besa.copy()
