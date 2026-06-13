@@ -1,3 +1,4 @@
+from copy import deepcopy
 from os import PathLike
 from pathlib import Path
 from warnings import warn
@@ -38,6 +39,11 @@ class PreprocPipeline:
         self.ica_eog_channels = ica_eog_channels
         self.highpass_freq = highpass_freq
         self.lowpass_freq = lowpass_freq
+
+    def copy(self):
+        """Create a copy of the PreprocPipeline instance."""
+
+        return deepcopy(self)
 
     def run(self, raw, besa=None):
         """Run the preprocessing pipeline."""

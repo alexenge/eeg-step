@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from .average import AveragesPipeline
 from .component import ComponentsPipeline
 from .epoch import EpochPipeline
@@ -22,6 +24,11 @@ class ParticipantPipeline:
         self.epoch_pipeline = epoch_pipeline
         self.components_pipeline = components_pipeline
         self.averages_pipeline = averages_pipeline
+
+    def copy(self):
+        """Create a copy of the ParticipantPipeline instance."""
+
+        return deepcopy(self)
 
     def run(self):
         self.input_pipeline.run()

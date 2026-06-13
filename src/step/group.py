@@ -1,3 +1,4 @@
+from copy import deepcopy
 from os import PathLike
 
 import pandas as pd
@@ -132,6 +133,11 @@ class GroupPipeline:
                 averages_pipeline,
             )
             self.participant_pipelines[participant_id] = participant_pipeline
+
+    def copy(self):
+        """Create a copy of the GroupPipeline instance."""
+
+        return deepcopy(self)
 
     def run(self):
         for participant_pipeline in self.participant_pipelines.values():

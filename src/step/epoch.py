@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 from mne import Epochs, combine_evoked, events_from_annotations
 from mne.io import BaseRaw
@@ -23,6 +25,11 @@ class EpochPipeline:
         self.tmax = tmax
         self.baseline = baseline
         self.reject = reject
+
+    def copy(self):
+        """Create a copy of the EpochPipeline instance."""
+
+        return deepcopy(self)
 
     def run(self, raw, log=None):
         """Run the epoch pipeline."""

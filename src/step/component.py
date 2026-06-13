@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass
 
 import numpy as np
@@ -22,6 +23,11 @@ class ComponentPipeline:
     def __init__(self, component: Component, compute_se: bool = False):
         self.component = component
         self.compute_se = compute_se
+
+    def copy(self):
+        """Create a copy of the ComponentPipeline instance."""
+
+        return deepcopy(self)
 
     def run(self, epochs, bad_ixs):
         """Run the component pipeline."""
@@ -102,6 +108,11 @@ class ComponentsPipeline:
             self.component_pipelines[component.name] = ComponentPipeline(
                 component, compute_se
             )
+
+    def copy(self):
+        """Create a copy of the ComponentsPipeline instance."""
+
+        return deepcopy(self)
 
     def run(self, epochs, bad_ixs):
         for component_pipeline in self.component_pipelines.values():

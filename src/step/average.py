@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from warnings import warn
 
@@ -17,6 +18,11 @@ class AveragePipeline:
 
     def __init__(self, average: Average):
         self.average = average
+
+    def copy(self):
+        """Create a copy of the AveragePipeline instance."""
+
+        return deepcopy(self)
 
     def run(self, epochs, bad_ixs):
         """Run the averaging pipeline."""
@@ -56,6 +62,11 @@ class AveragesPipeline:
         self.average_pipelines = {}
         for average in self.averages_:
             self.average_pipelines[average.name] = AveragePipeline(average)
+
+    def copy(self):
+        """Create a copy of the AveragesPipeline instance."""
+
+        return deepcopy(self)
 
     def run(self, epochs, bad_ixs):
         for average_pipeline in self.average_pipelines.values():

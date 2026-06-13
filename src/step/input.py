@@ -1,3 +1,4 @@
+from copy import deepcopy
 from os import PathLike
 from pathlib import Path
 
@@ -21,6 +22,11 @@ class InputPipeline:
         self.raw_file = raw_file
         self.log_file = log_file
         self.besa_file = besa_file
+
+    def copy(self):
+        """Create a copy of the InputPipeline instance."""
+
+        return deepcopy(self)
 
     def run(self):
         """Run the input pipeline."""
