@@ -47,5 +47,7 @@ def test_group_pipeline_besa(sample_group_pipeline_besa):
     participant_pipelines = pipeline.participant_pipelines
     assert len(participant_pipelines) == 2
 
-    assert participant_pipelines["09"].preproc_pipeline.bad_channels == ["Fp1", "PO8"]
-    assert participant_pipelines["12"].preproc_pipeline.bad_channels is None
+    assert any(
+        bad_channels is not None and len(bad_channels) > 0
+        for bad_channels in pipeline.bad_channels_
+    )

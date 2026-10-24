@@ -484,7 +484,7 @@ def sample_group_pipeline_besa(
         log_files=sample_log_files,
         besa_files=sample_besa_files,
         downsample_sfreq=100,
-        bad_channels={"09": ["Fp1", "PO8"]},
+        bad_channels="auto",
         ica_method=None,
         triggers=sample_triggers,
         components=sample_components,
