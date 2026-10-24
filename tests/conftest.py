@@ -381,20 +381,33 @@ def sample_averages_pipeline(
 
 @pytest.fixture(scope="session")
 def sample_participant_pipeline(
-    sample_input_pipeline_besa,
-    sample_preproc_pipeline_besa,
-    sample_epoch_pipeline,
-    sample_components_pipeline,
-    sample_averages_pipeline,
+    sample_participant_id,
+    sample_raw_file,
+    sample_log_file,
+    sample_besa_file,
+    sample_triggers,
+    sample_components,
+    sample_averages,
 ):
     """Creates and runs a ParticipantPipeline for the sample data."""
 
+    input_pipeline = InputPipeline(
+        participant_id=sample_participant_id,
+        raw_file=sample_raw_file,
+        log_file=sample_log_file,
+        besa_file=sample_besa_file,
+    )
+    preproc_pipeline = PreprocPipeline(downsample_sfreq=100, ica_method=None)
+    epoch_pipeline = EpochPipeline(triggers=sample_triggers)
+    components_pipeline = ComponentsPipeline(sample_components)
+    averages_pipeline = AveragesPipeline(sample_averages)
+
     participant_pipeline = ParticipantPipeline(
-        sample_input_pipeline_besa,
-        sample_preproc_pipeline_besa,
-        sample_epoch_pipeline,
-        sample_components_pipeline,
-        sample_averages_pipeline,
+        input_pipeline,
+        preproc_pipeline,
+        epoch_pipeline,
+        components_pipeline,
+        averages_pipeline,
     )
     participant_pipeline.run()
 
